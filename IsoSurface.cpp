@@ -46,10 +46,7 @@ pair<glm::vec3, glm::vec3> IsoSurface::interpolation(glm::ivec3 p1, glm::ivec3 p
 
     mu = (this->iso_value - v1) / (v2 - v1);
 
-    coordinate_temp.x = p1.x + mu * (p2.x - p1.x);
-    coordinate_temp.y = p1.y + mu * (p2.y - p1.y);
-    coordinate_temp.z = p1.z + mu * (p2.z - p1.z);
-
+    coordinate_temp = glm::vec3(p1) + (float)mu * (glm::vec3(p2) - glm::vec3(p1));
     normal_temp = n1 + (float)mu * (n2 - n1);
 
     if (glm::length(normal_temp) >= EPSILON) normal_temp = glm::normalize(normal_temp);
