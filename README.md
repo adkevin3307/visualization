@@ -10,11 +10,9 @@
 * `glad` with correct version
 * `glm 0.9.9.7`
 
-```
-if you want to show histogram, you'll need
-* Python 3.7.3
-* matplotlib 3.1.2
-```
+> if you want to show histogram, you'll need
+> * Python 3.7.3
+> * matplotlib 3.1.2
 
 ## Usage
 
@@ -31,20 +29,21 @@ if you want to show histogram, you'll need
     * remove all `.exe`
     * remove `./Data/Scalar/histogram.txt`
 
-```
-if you want to show histogram, you'll need to run
-* `make histogram execute`
-    * compile all file
-    * generate `histogram.txt` at `./Data/Scalar`
-    * generate and execute `main.exe`
-* `python histogram.py`
-```
+> if you want to show histogram, you'll need to run
+> * `make histogram execute`
+>     * compile all file
+>     * generate `histogram.txt` at `./Data/Scalar`
+>     * generate and execute `main.exe`
+> * `python histogram.py`
 
 ### Control
 * scroll mouse wheel for zoom in and zoom out
 * click mouse left button and drag for move camera position
     * Spherical Coordinate System
 * click mouse right button and drag for move camera look at position
+
+## Result
+![](https://i.imgur.com/Guj3nhk.png)
 
 ## Class Structure
 
