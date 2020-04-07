@@ -83,21 +83,21 @@ void Volume::load_inf()
             sscanf(value.c_str(), "%f:%f:%f", &(this->_voxel_size.z), &(this->_voxel_size.y), &(this->_voxel_size.x));
         }
         else if (key.find("sample") != string::npos || key.find("value") != string::npos) {
-            if (value.find("float") != string::npos) {
+            if (value.find("float") != string::npos || value[0] == 'f') {
                 this->byte_size = 4;
                 this->_type = TYPE::FLOAT;
             }
-            if (value.find("char") != string::npos) {
+            if (value.find("char") != string::npos || value == "c" || value == "uc") {
                 this->byte_size = 1;
-                this->_type = (value.find("unsigned") != string::npos ? TYPE::UNSIGNED_CHAR : TYPE::CHAR);
+                this->_type = ((value.find("unsigned") != string::npos || value == "uc") ? TYPE::UNSIGNED_CHAR : TYPE::CHAR);
             }
-            else if (value.find("short") != string::npos) {
+            else if (value.find("short") != string::npos || value == "s" || value == "us") {
                 this->byte_size = 2;
-                this->_type = (value.find("unsigned") != string::npos ? TYPE::UNSIGNED_SHORT : TYPE::SHORT);
+                this->_type = ((value.find("unsigned") != string::npos || value == "us") ? TYPE::UNSIGNED_SHORT : TYPE::SHORT);
             }
-            else if (value.find("int") != string::npos) {
+            else if (value.find("int") != string::npos || value == "i" || value == "ui") {
                 this->byte_size = 4;
-                this->_type = (value.find("unsigned") != string::npos ? TYPE::UNSIGNED_INT : TYPE::INT);
+                this->_type = ((value.find("unsigned") != string::npos || value == "ui") ? TYPE::UNSIGNED_INT : TYPE::INT);
             }
         }
     }
