@@ -34,10 +34,10 @@ void WindowManagement::framebuffer_size_callback(GLFWwindow *window, int width, 
 void WindowManagement::mouse_callback(GLFWwindow *window, double xpos, double ypos)
 {
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        this->camera.process_mouse(BUTTON::LEFT, xpos - this->last_xpos, ypos - this->last_ypos);
+        this->camera.process_mouse(BUTTON::LEFT, xpos - this->last_xpos, this->last_ypos - ypos);
     }
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-        this->camera.process_mouse(BUTTON::RIGHT, this->last_xpos - xpos, this->last_ypos - ypos);
+        this->camera.process_mouse(BUTTON::RIGHT, this->last_xpos - xpos, ypos - this->last_ypos);
     }
 
     this->last_xpos = xpos;

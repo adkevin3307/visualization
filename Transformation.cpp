@@ -45,8 +45,8 @@ void Transformation::set_projection(GLfloat width, GLfloat height, GLfloat rate,
 {
     GLfloat left = -width / rate;
     GLfloat right = width / rate;
-    GLfloat bottom = height / rate;
-    GLfloat top = -height / rate;
+    GLfloat bottom = -height / rate;
+    GLfloat top = height / rate;
 
     this->_projection = glm::ortho(left, right, bottom, top, near, far);
 }
