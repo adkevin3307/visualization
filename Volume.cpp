@@ -72,7 +72,7 @@ void Volume::load_inf()
 
         if (key.find("file") != string::npos) continue;
         else if (key.find("endian") != string::npos || key.find("indian") != string::npos) {
-            this->_endian = (value.find("little") != string::npos ? ENDIAN::LITTLE : ENDIAN::BIG);
+            this->_endian = ((value.find("little") != string::npos || value == "l") ? ENDIAN::LITTLE : ENDIAN::BIG);
         }
         else if (key.find("resolution") != string::npos) {
             replace(value.begin(), value.end(), 'x', ':');
@@ -87,9 +87,9 @@ void Volume::load_inf()
                 this->byte_size = 4;
                 this->_type = TYPE::FLOAT;
             }
-            if (value.find("char") != string::npos || value == "c" || value == "uc") {
+            if (value.find("char") != string::npos || value == "b" || value == "ub") {
                 this->byte_size = 1;
-                this->_type = ((value.find("unsigned") != string::npos || value == "uc") ? TYPE::UNSIGNED_CHAR : TYPE::CHAR);
+                this->_type = ((value.find("unsigned") != string::npos || value == "ub") ? TYPE::UNSIGNED_CHAR : TYPE::CHAR);
             }
             else if (value.find("short") != string::npos || value == "s" || value == "us") {
                 this->byte_size = 2;
