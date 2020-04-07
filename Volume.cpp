@@ -5,6 +5,7 @@
 #include <fstream>
 #include <unistd.h>
 #include <stdexcept>
+#include <cctype>
 
 using namespace std;
 
@@ -63,16 +64,14 @@ void Volume::load_inf()
     while (getline(file, s)) {
         if (s[0] == '#') continue;
 
-        s.erase(remove(s.begin(), s.end(), ' '), s.end());
+        s.erase(remove_if(s.begin(), s.end(), ::isspace), s.end());
+        transform(s.begin(), s.end(), s.begin(), ::tolower);
 
         string key = s.substr(0, s.find('=')), value = s.substr(s.find('=') + 1);
 
-        transform(key.begin(), key.end(), key.begin(), ::tolower);
-        transform(value.begin(), value.end(), value.begin(), ::tolower);
-
         if (key.find("file") != string::npos) continue;
         else if (key.find("endian") != string::npos || key.find("indian") != string::npos) {
-            this->_endian = ((value.find("little") != string::npos || value == "l") ? ENDIAN::LITTLE : ENDIAN::BIG);
+            this->_endian = (value.find("l") != string::npos ? ENDIAN::LITTLE : ENDIAN::BIG);
         }
         else if (key.find("resolution") != string::npos) {
             replace(value.begin(), value.end(), 'x', ':');
@@ -83,21 +82,21 @@ void Volume::load_inf()
             sscanf(value.c_str(), "%f:%f:%f", &(this->_voxel_size.z), &(this->_voxel_size.y), &(this->_voxel_size.x));
         }
         else if (key.find("sample") != string::npos || key.find("value") != string::npos) {
-            if (value.find("float") != string::npos || value[0] == 'f') {
+            if (value.find("f") != string::npos) {
                 this->byte_size = 4;
                 this->_type = TYPE::FLOAT;
             }
-            if (value.find("char") != string::npos || value == "b" || value == "ub") {
+            else if (value.find("char") != string::npos || value == "b" || value == "ub") {
                 this->byte_size = 1;
-                this->_type = ((value.find("unsigned") != string::npos || value == "ub") ? TYPE::UNSIGNED_CHAR : TYPE::CHAR);
+                this->_type = ((value.find("u") != string::npos) ? TYPE::UNSIGNED_CHAR : TYPE::CHAR);
             }
             else if (value.find("short") != string::npos || value == "s" || value == "us") {
                 this->byte_size = 2;
-                this->_type = ((value.find("unsigned") != string::npos || value == "us") ? TYPE::UNSIGNED_SHORT : TYPE::SHORT);
+                this->_type = ((value.find("u") != string::npos) ? TYPE::UNSIGNED_SHORT : TYPE::SHORT);
             }
             else if (value.find("int") != string::npos || value == "i" || value == "ui") {
                 this->byte_size = 4;
-                this->_type = ((value.find("unsigned") != string::npos || value == "ui") ? TYPE::UNSIGNED_INT : TYPE::INT);
+                this->_type = ((value.find("u") != string::npos) ? TYPE::UNSIGNED_INT : TYPE::INT);
             }
         }
     }
