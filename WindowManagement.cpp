@@ -118,7 +118,7 @@ void WindowManagement::main_loop(Mesh &mesh, Shader &shader)
         transformation.set();
 
         shader.set_uniform("view_pos", this->camera.position());
-        shader.set_uniform("light_pos", this->camera.center() - this->camera.position() / 2.0f + 150.0f * this->camera.up());
+        shader.set_uniform("light_pos", this->camera.position());
         shader.set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
 
         shader.set_uniform("object_color", glm::vec3(0.41, 0.37, 0.89));
