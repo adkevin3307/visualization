@@ -1,6 +1,7 @@
 #version 440 core
 in vec3 fragment_pos;
 in vec3 fragment_normal;
+in float slice_check;
 
 out vec4 fragment_color;
 
@@ -11,6 +12,8 @@ uniform vec3 object_color;
 
 void main()
 {
+    if (slice_check < 0.0) discard;
+
     vec3 normal = normalize(fragment_normal);
     vec3 view_direction = normalize(fragment_pos - view_pos);
 
