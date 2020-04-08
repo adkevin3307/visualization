@@ -7,11 +7,6 @@
 
 using namespace std;
 
-IsoSurface::IsoSurface()
-{
-
-}
-
 IsoSurface::IsoSurface(string inf_file, string raw_file)
 {
     this->volume = Volume(inf_file, raw_file);
@@ -127,4 +122,9 @@ vector<GLfloat>& IsoSurface::vertex()
 glm::vec3 IsoSurface::volume_shape()
 {
     return glm::vec3(this->volume.shape()) * this->volume.voxel_size();
+}
+
+vector<int> IsoSurface::attribute_size()
+{
+    return vector<int>{3, 3};
 }

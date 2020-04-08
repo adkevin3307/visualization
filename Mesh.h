@@ -15,10 +15,11 @@ private:
     Buffer buffer;
     glm::vec3 shape;
     vector<GLfloat> vertex;
+    vector<int> attribute_size;
 
 public:
     Mesh();
-    Mesh(vector<GLfloat> &vertex, glm::vec3 shape = glm::vec3(0.0, 0.0, 0.0), int stride = 6);
+    Mesh(vector<GLfloat> &vertex, vector<int> attribute_size, glm::vec3 shape = glm::vec3(0.0, 0.0, 0.0));
     ~Mesh();
 
     void init();

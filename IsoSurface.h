@@ -20,7 +20,6 @@ private:
     void calculate();
     
 public:
-    IsoSurface();
     IsoSurface(string inf_file, string raw_file);
     ~IsoSurface();
 
@@ -29,4 +28,5 @@ public:
     vector<GLfloat>& vertex();
 
     glm::vec3 volume_shape();
+    vector<int> attribute_size();
 };

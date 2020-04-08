@@ -1,20 +1,24 @@
 #include "Mesh.h"
 
+#include <numeric>
+
 using namespace std;
 
 Mesh::Mesh()
 {
-    this->vertex.clear();
-    this->vertex.shrink_to_fit();
     this->shape = glm::vec3(0.0, 0.0, 0.0);
     this->stride = 0;
+
+    this->vertex.clear();
+    this->vertex.shrink_to_fit();
 }
 
-Mesh::Mesh(vector<GLfloat> &vertex, glm::vec3 shape, int stride) : Mesh::Mesh()
+Mesh::Mesh(vector<GLfloat> &vertex, vector<int> attribute_size, glm::vec3 shape) : Mesh::Mesh()
 {
     this->vertex = vertex;
+    this->attribute_size = attribute_size;
     this->shape = shape;
-    this->stride = stride;
+    this->stride = accumulate(this->attribute_size.begin(), this->attribute_size.end(), 0);
 }
 
 Mesh::~Mesh()
@@ -27,8 +31,13 @@ void Mesh::init()
     this->buffer = BufferManagement::generate();
     BufferManagement::bind(this->buffer);
     BufferManagement::fill(vertex);
-    BufferManagement::set(0, 3, this->stride, 0);
-    BufferManagement::set(1, 3, this->stride, 3 * sizeof(GLfloat));
+
+    int sum = 0;
+    for (size_t i = 0; i < this->attribute_size.size(); i++) {
+        BufferManagement::set(i, this->attribute_size[i], this->stride, sum * sizeof(GLfloat));
+        sum += this->attribute_size[i];
+    }
+
     BufferManagement::unbind();
 }
 
