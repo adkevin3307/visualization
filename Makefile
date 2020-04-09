@@ -7,7 +7,7 @@ ifeq ($(OS), Windows_NT)
 	remove_command += del *.exe &
 	remove_command += del Data\Scalar\histogram.txt
 else
-	remove_command += rm -f *.exe &
+	remove_command += rm -f *.exe *.out &
 	remove_command += rm -f ./Data/Scalar/histogram.txt
 endif
 
@@ -23,8 +23,8 @@ execute:
 	cmd.exe /C main.exe
 
 linux:
-	g++ -I./include/ $(filter-out test.cpp, $(wildcard *.cpp)) src/glad.c -L./lib/ $(linux_args) -o main
-	./main
+	g++ -I./include/ $(filter-out test.cpp, $(wildcard *.cpp)) src/glad.c -L./lib/ $(linux_args) -o main.out
+	./main.ou
 
 clean:
 	$(remove_command)
