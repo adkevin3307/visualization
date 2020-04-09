@@ -4,15 +4,15 @@
 
 #include <iostream>
 #include <algorithm>
+#include <iomanip>
 
 using namespace std;
 
-IsoSurface::IsoSurface(string inf_file, string raw_file)
+IsoSurface::IsoSurface(string inf_file, string raw_file) : super::Method(inf_file, raw_file)
 {
-    this->volume = Volume(inf_file, raw_file);
-    this->iso_value = this->volume.average();
+    this->iso_value = super::volume.average();
 
-    this->volume.show();
+    super::volume.show();
 }
 
 IsoSurface::~IsoSurface()
@@ -22,12 +22,12 @@ IsoSurface::~IsoSurface()
 
 pair<glm::vec3, glm::vec3> IsoSurface::interpolation(glm::ivec3 p1, glm::ivec3 p2)
 {
-    glm::vec3 voxel_size = this->volume.voxel_size();
+    glm::vec3 voxel_size = super::volume.voxel_size();
 
-    double v1 = this->volume(p1).first;
-    double v2 = this->volume(p2).first;
-    glm::vec3 n1 = this->volume(p1).second;
-    glm::vec3 n2 = this->volume(p2).second;
+    double v1 = super::volume(p1).first;
+    double v2 = super::volume(p2).first;
+    glm::vec3 n1 = super::volume(p1).second;
+    glm::vec3 n2 = super::volume(p2).second;
 
     if (glm::length(n1) >= EPSILON) n1 = glm::normalize(n1);
     if (glm::length(n2) >= EPSILON) n2 = glm::normalize(n2);
@@ -53,21 +53,21 @@ void IsoSurface::calculate()
 {
     vector<pair<glm::vec3, glm::vec3>> v(12);
 
-    this->_vertex.clear();
-    this->_vertex.shrink_to_fit();
+    super::_vertex.clear();
+    super::_vertex.shrink_to_fit();
 
-    for (auto i = 0; i < this->volume.shape().x - 1; i++) {
-        for (auto j = 0; j < this->volume.shape().y - 1; j++) {
-            for (auto k = 0; k < this->volume.shape().z - 1; k++) {
+    for (auto i = 0; i < super::volume.shape().x - 1; i++) {
+        for (auto j = 0; j < super::volume.shape().y - 1; j++) {
+            for (auto k = 0; k < super::volume.shape().z - 1; k++) {
                 int index = 0;
-                if (this->volume(i, j, k).first < this->iso_value) index |= 1;
-                if (this->volume(i, j, k + 1).first < this->iso_value) index |= 2;
-                if (this->volume(i, j + 1, k + 1).first < this->iso_value) index |= 4;
-                if (this->volume(i, j + 1, k).first < this->iso_value) index |= 8;
-                if (this->volume(i + 1, j, k).first < this->iso_value) index |= 16;
-                if (this->volume(i + 1, j, k + 1).first < this->iso_value) index |= 32;
-                if (this->volume(i + 1, j + 1, k + 1).first < this->iso_value) index |= 64;
-                if (this->volume(i + 1, j + 1, k).first < this->iso_value) index |= 128;
+                if (super::volume(i, j, k).first < this->iso_value) index |= 1;
+                if (super::volume(i, j, k + 1).first < this->iso_value) index |= 2;
+                if (super::volume(i, j + 1, k + 1).first < this->iso_value) index |= 4;
+                if (super::volume(i, j + 1, k).first < this->iso_value) index |= 8;
+                if (super::volume(i + 1, j, k).first < this->iso_value) index |= 16;
+                if (super::volume(i + 1, j, k + 1).first < this->iso_value) index |= 32;
+                if (super::volume(i + 1, j + 1, k + 1).first < this->iso_value) index |= 64;
+                if (super::volume(i + 1, j + 1, k).first < this->iso_value) index |= 128;
 
                 if (edgeTable[index] == 0) continue;
                 if (edgeTable[index] & 1) v[0] = this->interpolation(glm::ivec3(i, j, k), glm::ivec3(i, j, k + 1));
@@ -85,13 +85,13 @@ void IsoSurface::calculate()
 
                 for (auto vertex = 0; triangleTable[index][vertex] != -1 && vertex < 16; vertex += 3) {
                     for (auto delta_vertex = 0; delta_vertex < 3; delta_vertex++) {
-                        this->_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].first.x);
-                        this->_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].first.y);
-                        this->_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].first.z);
+                        super::_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].first.x);
+                        super::_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].first.y);
+                        super::_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].first.z);
 
-                        this->_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].second.x);
-                        this->_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].second.y);
-                        this->_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].second.z);
+                        super::_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].second.x);
+                        super::_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].second.y);
+                        super::_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].second.z);
                     }
                 }
             }
@@ -99,7 +99,7 @@ void IsoSurface::calculate()
     }
 
     cout << "iso value: " << this->iso_value << '\n';
-    cout << "vertex size: " << this->_vertex.size() << '\n';
+    cout << "vertex size: " << super::_vertex.size() << '\n';
 }
 
 void IsoSurface::run()
@@ -112,16 +112,6 @@ void IsoSurface::run(float value)
     this->iso_value = value;
 
     this->calculate();
-}
-
-vector<GLfloat>& IsoSurface::vertex()
-{
-    return this->_vertex;
-}
-
-glm::vec3 IsoSurface::volume_shape()
-{
-    return glm::vec3(this->volume.shape()) * this->volume.voxel_size();
 }
 
 vector<int> IsoSurface::attribute_size()
