@@ -1,4 +1,6 @@
 args = -lglfw3 -lopengl32 -lgdi32 -Wall
+linux_args = -lglfw3 -pthread -lXrandr -lXxf86vm -lXi -lXinerama -lX11 -ldl -lXcursor
+
 remove_command =
 
 ifeq ($(OS), Windows_NT)
@@ -19,6 +21,10 @@ histogram:
 
 execute:
 	cmd.exe /C main.exe
+
+linux:
+	g++ -I./include/ $(filter-out test.cpp, $(wildcard *.cpp)) src/glad.c -L./lib/ $(linux_args) -o main
+	./main
 
 clean:
 	$(remove_command)

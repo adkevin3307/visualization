@@ -1,5 +1,7 @@
 #include "BufferManagement.h"
 
+#include <stdint.h>
+
 using namespace std;
 
 Buffer BufferManagement::generate()
@@ -25,7 +27,7 @@ void BufferManagement::fill(vector<GLfloat> &vertex)
 
 void BufferManagement::set(GLuint index, GLint size, GLint stride, int offset)
 {
-    glVertexAttribPointer(index, size, GL_FLOAT, GL_FALSE, stride * sizeof(GLfloat), (void*)offset);
+    glVertexAttribPointer(index, size, GL_FLOAT, GL_FALSE, stride * sizeof(GLfloat), (void*)(intptr_t)offset);
     glEnableVertexAttribArray(index);
 }
 
