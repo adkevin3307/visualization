@@ -24,7 +24,7 @@ execute:
 
 linux:
 	g++ -I./include/ $(filter-out test.cpp, $(wildcard *.cpp)) src/glad.c -L./lib/ $(linux_args) -o main.out
-	./main.ou
+	./main.out
 
 clean:
 	$(remove_command)
