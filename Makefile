@@ -1,6 +1,8 @@
 args = -lglfw3 -lopengl32 -lgdi32 -Wall
 linux_args = -lglfw3 -pthread -lXrandr -lXxf86vm -lXi -lXinerama -lX11 -ldl -lXcursor
 
+compile_file = $(filter-out test.cpp, $(wildcard *.cpp)) src/glad.c
+
 remove_command =
 
 ifeq ($(OS), Windows_NT)
@@ -14,16 +16,16 @@ endif
 default: compile execute
 
 compile:
-	cmd.exe /C g++ -I./include/ $(filter-out test.cpp, $(wildcard *.cpp)) src/glad.c -L./lib/ $(args) -o main.exe
+	cmd.exe /C g++ -I./include/ $(compile_file) -L./lib/ $(args) -o main.exe
 
 histogram:
-	cmd.exe /C g++ -DHISTOGRAM -I./include/ $(filter-out test.cpp, $(wildcard *.cpp)) src/glad.c -L./lib/ $(args) -o main.exe
+	cmd.exe /C g++ -DHISTOGRAM -I./include/ $(compile_file) -L./lib/ $(args) -o main.exe
 
 execute:
 	cmd.exe /C main.exe
 
 linux:
-	g++ -I./include/ $(filter-out test.cpp, $(wildcard *.cpp)) src/glad.c -L./lib/ $(linux_args) -o main.out
+	g++ -I./include/ $(compile_file) -L./lib/ $(linux_args) -o main.out
 	./main.out
 
 clean:
