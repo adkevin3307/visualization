@@ -3,14 +3,14 @@
 
 ## Environment
 * Windows
-* MinGW
-    * `g++ 9.2.0`
+* MinGW-W64
+    * `g++ 8.1.0`
 * `opengl 4.4`
 * `glfw 3.3.2`
 * `glad` with correct version
 * `glm 0.9.9.7`
 
-> if you want to show histogram, you'll need
+> If you want to show histogram, you'll need
 > * Python 3.7.3
 > * matplotlib 3.1.2
 
@@ -18,43 +18,41 @@
 
 ### Compile and Execute
 * `make`
-    * compile all file
-    * generate and run `main.exe`
+    * Compile all file
+    * Generate and Execute`main.exe`
 * `make compile`
-    * compile all file
-    * generate `main.exe`
+    * Compile all file
+    * Generate `main.exe`
 * `make execute`
-    * execute `main.exe`
+    * Execute `main.exe`
 * `make clean`
-    * remove all `.exe`
-    * remove `./Data/Scalar/histogram.txt`
+    * Remove all `.exe`
+    * Remove `./Data/Scalar/histogram.txt`
 
-> if you want to show histogram, you'll need to run
+> If you want to show histogram, you'll need to run
 > * `make histogram execute`
->     * compile all file
->     * generate `histogram.txt` at `./Data/Scalar`
->     * generate and execute `main.exe`
+>     * Compile all file
+>     * Generate `histogram.txt` at `./Data/Scalar`
+>     * Generate and Execute `main.exe`
 > * `python histogram.py`
 
 ### Control
-* scroll mouse wheel for zoom in and zoom out
-* click mouse left button and drag for move camera position
+* Scroll mouse wheel: Zoom in and Zoom out
+* Click and Drag mouse left button: Move camera position
     * Spherical Coordinate System
-* click mouse right button and drag for move camera look at position
-
-## Result
-![](https://i.imgur.com/Guj3nhk.png)
+* Click and Drag mouse right button: Move camera look at position
+* `+` and `-`: Control slice plane
 
 ## Class Structure
 
 #### `Volume`
 * read inf file and raw file
-* calculate vertices gradient
+* calculate vertices and gradient
 * generate **float** type data
 
 #### `IsoSurface`
 * calculate iso surface after volume read data
-* generate triangles vertices and normals
+* generate triangles' vertices and normals
 
 #### `Mesh`
 * setting VBO and VAO with triangles vertices and normals
