@@ -133,7 +133,11 @@ void WindowManagement::main_loop(Mesh &mesh, Shader &shader)
         mesh.transform(transformation);
         transformation.set();
 
+#ifdef CLIP
         shader.set_uniform("clip_plane", glm::vec4(0.0, 0.0, 1.0, this->clip));
+#else
+        shader.set_uniform("clip_plane", glm::vec4(0.0, 0.0, 0.0, 1.0));
+#endif
 
         shader.set_uniform("view_pos", this->camera.position());
         shader.set_uniform("light_pos", this->camera.position());
