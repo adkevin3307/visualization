@@ -1,8 +1,8 @@
 args = -lglfw3 -lopengl32 -lgdi32 -Wall
 linux_args = -lglfw3 -pthread -lXrandr -lXxf86vm -lXi -lXinerama -lX11 -ldl -lXcursor
 
-compile_file = $(filter-out test.cpp, $(wildcard *.cpp)) src/glad.c
-compile_test_file = $(filter-out main.cpp, $(wildcard *.cpp)) src/glad.c
+compile_file = $(filter-out test.cpp, $(wildcard *.cpp)) src/glad.c src/*.cpp
+compile_test_file = $(filter-out main.cpp, $(wildcard *.cpp)) src/glad.c src/*.cpp
 
 remove_command =
 

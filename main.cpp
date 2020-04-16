@@ -12,6 +12,8 @@ int main()
 {
     string filename;
     while (cout << "filename: ", cin >> filename) {
+        cout << "==================== INFO ====================" << '\n';
+
         IsoSurface iso_surface("./Data/Scalar/" + filename + ".inf", "./Data/Scalar/" + filename + ".raw");
         iso_surface.run();
 
@@ -25,6 +27,8 @@ int main()
         mesh.init();
 
         window_management.main_loop(mesh, shader);
+
+        cout << "==============================================" << '\n';
     }
 
     return 0;
