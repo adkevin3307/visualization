@@ -6,8 +6,9 @@ using namespace std;
 
 Mesh::Mesh()
 {
-    this->shape = glm::vec3(0.0, 0.0, 0.0);
     this->stride = 0;
+    this->attribute_size.resize(1, 0);
+    this->shape = glm::vec3(0.0, 0.0, 0.0);
 
     this->vertex.clear();
     this->vertex.shrink_to_fit();
@@ -49,6 +50,6 @@ void Mesh::transform(Transformation &transformation)
 void Mesh::draw(GLenum mode)
 {
     BufferManagement::bind(this->buffer);
-    BufferManagement::draw(this->buffer, 0, this->vertex.size() / this->stride, mode);
+    BufferManagement::draw(this->buffer, 0, ((this->stride == 0) ? 0 : (this->vertex.size() / this->stride)), mode);
     BufferManagement::unbind();
 }
