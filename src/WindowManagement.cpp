@@ -1,6 +1,7 @@
 #include "WindowManagement.h"
 
 #include <glm/ext.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
@@ -12,7 +13,7 @@
 using namespace std;
 
 WindowManagement::WindowManagement()
-    : last_xpos(0.0), last_ypos(0.0), rate(7.0), clip(0.0)
+    : last_xpos(0.0), last_ypos(0.0), rate(7.0)
 {
 
 }
@@ -41,12 +42,6 @@ void WindowManagement::key_callback(GLFWwindow *window, int key, int scancode, i
         case GLFW_KEY_SPACE:
             this->camera.reset();
             break;
-        case GLFW_KEY_KP_ADD:
-            this->clip += 1.0;
-            break;
-        case GLFW_KEY_KP_SUBTRACT:
-            this->clip -= 1.0;
-            break;
         default:
             break;
     }
@@ -54,6 +49,8 @@ void WindowManagement::key_callback(GLFWwindow *window, int key, int scancode, i
 
 void WindowManagement::mouse_callback(GLFWwindow *window, double xpos, double ypos)
 {
+    if (ImGui::IsAnyMouseDown() && ImGui::IsAnyWindowFocused()) return;
+
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         this->camera.process_mouse(BUTTON::LEFT, xpos - this->last_xpos, this->last_ypos - ypos);
     }
@@ -120,9 +117,9 @@ void WindowManagement::init()
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_::ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_::ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -138,6 +135,7 @@ void WindowManagement::init()
 
 void WindowManagement::main_loop(Mesh &mesh, Shader &shader)
 {
+    float clip_normal[] = {0.0, 0.0, 0.0}, clip_distance = 1.0;
     while (!glfwWindowShouldClose(this->window)) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -147,17 +145,21 @@ void WindowManagement::main_loop(Mesh &mesh, Shader &shader)
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        // render your GUI
+        ImGui::Begin("Controller");
+        ImGui::SliderFloat3("Clip Plane Normal", clip_normal, -1.0, 1.0);
+        ImGui::SliderFloat("Clip Plane Distanse", &clip_distance, -150.0, 150.0);
+        ImGui::End();
+
         Transformation transformation(shader);
         transformation.set_projection(WIDTH, HEIGHT, this->rate, 0.0, 500.0);
         transformation.set_view(this->camera.view_matrix());
         mesh.transform(transformation);
         transformation.set();
 
-#ifdef CLIP
-        shader.set_uniform("clip_plane", glm::vec4(0.0, 0.0, 1.0, this->clip));
-#else
-        shader.set_uniform("clip_plane", glm::vec4(0.0, 0.0, 0.0, 1.0));
-#endif
+        glm::vec3 clip_plane = glm::make_vec3(clip_normal);
+        if (glm::length(clip_plane) > EPSILON) clip_plane = glm::normalize(clip_plane);
+        shader.set_uniform("clip_plane", glm::vec4(clip_plane, clip_distance));
 
         shader.set_uniform("view_pos", this->camera.position());
         shader.set_uniform("light_pos", this->camera.position());
@@ -169,11 +171,6 @@ void WindowManagement::main_loop(Mesh &mesh, Shader &shader)
         shader.set_uniform("object_color", glm::vec3(0.36, 0.32, 0.84));
         mesh.draw(GL_LINE);
 
-        // render your GUI
-        ImGui::Begin("Demo window");
-        ImGui::Button("Hello!");
-        ImGui::End();
-
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -181,7 +178,6 @@ void WindowManagement::main_loop(Mesh &mesh, Shader &shader)
         glfwPollEvents();
     }
 
-    // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();

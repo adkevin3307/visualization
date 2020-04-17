@@ -10,9 +10,11 @@ remove_command =
 
 ifeq ($(OS), Windows_NT)
 	remove_command += del *.exe &
+	remove_command += del imgui.ini &
 	remove_command += del Data\Scalar\histogram.txt
 else
 	remove_command += rm -f *.exe *.out &
+	remove_command += rm -f imgui.ini &
 	remove_command += rm -f ./Data/Scalar/histogram.txt
 endif
 
