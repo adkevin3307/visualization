@@ -1,6 +1,9 @@
 #include "WindowManagement.h"
 
 #include <glm/ext.hpp>
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
 #include <iostream>
 #include <stdexcept>
 
@@ -114,6 +117,20 @@ void WindowManagement::init()
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) throw runtime_error("Failed to initialize GLAD");
 
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+
+    // Setup Platform/Renderer bindings
+    ImGui_ImplGlfw_InitForOpenGL(this->window, true);
+    ImGui_ImplOpenGL3_Init("#version 440");
+
     glEnable(GL_DEPTH_TEST);
 
     this->set_callback();
@@ -124,6 +141,11 @@ void WindowManagement::main_loop(Mesh &mesh, Shader &shader)
     while (!glfwWindowShouldClose(this->window)) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
         Transformation transformation(shader);
         transformation.set_projection(WIDTH, HEIGHT, this->rate, 0.0, 500.0);
@@ -147,9 +169,22 @@ void WindowManagement::main_loop(Mesh &mesh, Shader &shader)
         shader.set_uniform("object_color", glm::vec3(0.36, 0.32, 0.84));
         mesh.draw(GL_LINE);
 
+        // render your GUI
+        ImGui::Begin("Demo window");
+        ImGui::Button("Hello!");
+        ImGui::End();
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         glfwSwapBuffers(this->window);
         glfwPollEvents();
     }
+
+    // Cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     glfwDestroyWindow(window);
     glfwTerminate();

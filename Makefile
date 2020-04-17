@@ -1,8 +1,10 @@
-args = -lglfw3 -lopengl32 -lgdi32 -Wall
-linux_args = -lglfw3 -pthread -lXrandr -lXxf86vm -lXi -lXinerama -lX11 -ldl -lXcursor
+LIBS = -L./lib -lglfw3 -lopengl32 -lgdi32
+LINUX_LIBS = -L./lib -lglfw3 -pthread -lXrandr -lXxf86vm -lXi -lXinerama -lX11 -ldl -lXcursor
 
-compile_file = $(filter-out test.cpp, $(wildcard *.cpp)) src/glad.c src/*.cpp
-compile_test_file = $(filter-out main.cpp, $(wildcard *.cpp)) src/glad.c src/*.cpp
+CXXFLAGS = -I./include -I./include/imgui -Wall
+
+SOURCE = $(filter-out test.cpp, $(wildcard *.cpp)) src/glad/* src/imgui/* src/*.cpp
+SOURCE_TEST = $(filter-out main.cpp, $(wildcard *.cpp)) src/glad/* src/imgui/* src/*.cpp
 
 remove_command =
 
@@ -17,20 +19,20 @@ endif
 default: compile execute
 
 compile:
-	cmd.exe /C g++ -I./include/ $(compile_file) -L./lib/ $(args) -o main.exe
+	cmd.exe /C g++ $(CXXFLAGS) $(SOURCE) $(LIBS) -o main.exe
 
 histogram:
-	cmd.exe /C g++ -DHISTOGRAM -I./include/ $(compile_file) -L./lib/ $(args) -o main.exe
+	cmd.exe /C g++ -DHISTOGRAM $(CXXFLAGS) $(SOURCE) $(LIBS) -o main.exe
 
 execute:
 	cmd.exe /C main.exe
 
 test:
-	cmd.exe /C g++ -I./include/ $(compile_test_file) -L./lib/ $(args) -o test.exe
+	cmd.exe /C g++ $(CXXFLAGS) $(SOURCE_TEST) $(LIBS) -o test.exe
 	cmd.exe /C test.exe
 
 linux:
-	g++ -I./include/ $(compile_file) -L./lib/ $(linux_args) -o main.out
+	g++ $(CXXFLAGS) $(SOURCE) $(LINUX_LIBS) -o main.out
 	./main.out
 
 clean:
