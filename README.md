@@ -41,7 +41,7 @@
 * Click and Drag mouse left button: Move camera position
     * Spherical Coordinate System
 * Click and Drag mouse right button: Move camera look at position
-* `+` and `-`: Control slice plane
+* GUI: Control clip plane
 
 ## Class Structure
 
