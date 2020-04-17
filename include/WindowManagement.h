@@ -14,7 +14,7 @@ using namespace std;
 
 class WindowManagement {
 private:
-    double last_xpos, last_ypos, rate, clip;
+    double last_xpos, last_ypos, rate;
     Camera camera;
     GLFWwindow *window;
 
