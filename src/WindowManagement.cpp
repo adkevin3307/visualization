@@ -1,5 +1,7 @@
 #include "WindowManagement.h"
 
+#include "constant.h"
+
 #include <glm/ext.hpp>
 #include <iostream>
 #include <stdexcept>

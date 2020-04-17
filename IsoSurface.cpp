@@ -1,6 +1,6 @@
 #include "IsoSurface.h"
 
-#include "include/constant.h"
+#include "constant.h"
 
 #include <iostream>
 #include <algorithm>
