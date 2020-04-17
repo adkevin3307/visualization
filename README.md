@@ -50,7 +50,13 @@
 * calculate vertices and gradient
 * generate **float** type data
 
+#### `Method`
+* provide basic function
+* set attribute_size virtual function
+
 #### `IsoSurface`
+* inheritance `Method`
+* implement virtual function
 * calculate iso surface after volume read data
 * generate triangles' vertices and normals
 
