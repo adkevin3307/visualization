@@ -14,15 +14,16 @@ private:
     int stride;
     Buffer buffer;
     glm::vec3 shape;
+    GLenum render_mode;
     vector<GLfloat> vertex;
-    vector<int> attribute_size;
+    vector<int> attribute;
 
 public:
     Mesh();
-    Mesh(vector<GLfloat> &vertex, vector<int> attribute_size, glm::vec3 shape = glm::vec3(0.0, 0.0, 0.0));
+    Mesh(vector<GLfloat> &vertex, vector<int> attribute, glm::vec3 shape = glm::vec3(0.0), GLenum render_mode = GL_TRIANGLES);
     ~Mesh();
 
     void init();
     void transform(Transformation &transformation);
-    void draw(GLenum mode);
+    void draw(GLenum rasterize_mode);
 };

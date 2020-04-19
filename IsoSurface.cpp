@@ -114,7 +114,12 @@ void IsoSurface::run(float value)
     this->calculate();
 }
 
-vector<int> IsoSurface::attribute_size()
+vector<int> IsoSurface::attribute()
 {
     return vector<int>{3, 3};
+}
+
+GLenum IsoSurface::render_mode()
+{
+    return GL_TRIANGLES;
 }

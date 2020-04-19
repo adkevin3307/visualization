@@ -20,6 +20,10 @@ LIBS = -L./lib
 mkdir =
 rm =
 
+ifeq ($(findstring histogram, $(MAKECMDGOALS)), histogram)
+	CXXFLAGS += -DHISTOGRAM
+endif
+
 ifeq ($(OS), Windows_NT)
 	LIBS += -lglfw3 -lopengl32 -lgdi32
 
@@ -55,7 +59,7 @@ $(OBJ_DIR)/%.o: src/imgui/%.cpp
 $(OBJ_DIR)/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-all test: create_directory $(EXE) execute
+all histogram test: create_directory $(EXE) execute
 	@echo Compile and Execute Success
 
 create_directory:

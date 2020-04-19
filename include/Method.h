@@ -21,5 +21,6 @@ public:
     glm::vec3 volume_shape();
     vector<GLfloat>& vertex();
 
-    virtual vector<int> attribute_size() = 0;
+    virtual vector<int> attribute() = 0;
+    virtual GLenum render_mode() = 0;
 };

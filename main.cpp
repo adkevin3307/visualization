@@ -23,7 +23,7 @@ int main()
         Shader shader("./src/shader/vertex.glsl", "./src/shader/fragment.glsl");
         shader.use();
 
-        Mesh mesh(iso_surface.vertex(), iso_surface.attribute_size(), iso_surface.volume_shape());
+        Mesh mesh(iso_surface.vertex(), iso_surface.attribute(), iso_surface.volume_shape(), iso_surface.render_mode());
         mesh.init();
 
         window_management.main_loop(mesh, shader);

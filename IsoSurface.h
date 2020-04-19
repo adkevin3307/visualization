@@ -26,5 +26,6 @@ public:
 	void run();
 	void run(float value);
 
-	vector<int> attribute_size() override;
+	vector<int> attribute() override;
+	GLenum render_mode() override;
 };

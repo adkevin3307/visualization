@@ -37,8 +37,8 @@ void BufferManagement::unbind()
     glBindVertexArray(0);
 }
 
-void BufferManagement::draw(Buffer &buffer, int first, int count, GLenum mode)
+void BufferManagement::draw(Buffer &buffer, int first, int count, GLenum render_mode, GLenum rasterize_mode)
 {
-    glPolygonMode(GL_FRONT_AND_BACK, mode);
-    glDrawArrays(GL_TRIANGLES, first, count);
+    glPolygonMode(GL_FRONT_AND_BACK, rasterize_mode);
+    glDrawArrays(render_mode, first, count);
 }
