@@ -59,8 +59,8 @@ void IsoSurface::run()
 
     vector<pair<glm::vec3, glm::vec3>> v(12);
 
-    super::_vertex.clear();
-    super::_vertex.shrink_to_fit();
+    this->_vertex.clear();
+    this->_vertex.shrink_to_fit();
 
     for (auto i = 0; i < super::volume.shape().x - 1; i++) {
         for (auto j = 0; j < super::volume.shape().y - 1; j++) {
@@ -91,20 +91,25 @@ void IsoSurface::run()
 
                 for (auto vertex = 0; triangleTable[index][vertex] != -1 && vertex < 16; vertex += 3) {
                     for (auto delta_vertex = 0; delta_vertex < 3; delta_vertex++) {
-                        super::_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].first.x);
-                        super::_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].first.y);
-                        super::_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].first.z);
+                        this->_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].first.x);
+                        this->_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].first.y);
+                        this->_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].first.z);
 
-                        super::_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].second.x);
-                        super::_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].second.y);
-                        super::_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].second.z);
+                        this->_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].second.x);
+                        this->_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].second.y);
+                        this->_vertex.push_back(v[triangleTable[index][vertex + delta_vertex]].second.z);
                     }
                 }
             }
         }
     }
 
-    cout << "vertex size: " << super::_vertex.size() << '\n';
+    cout << "vertex size: " << this->_vertex.size() << '\n';
+}
+
+vector<GLfloat>& IsoSurface::vertex()
+{
+    return this->_vertex;
 }
 
 vector<int> IsoSurface::attribute()

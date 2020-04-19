@@ -20,6 +20,8 @@ int main()
         Method *method = new IsoSurface("./Data/Scalar/" + filename + ".inf", "./Data/Scalar/" + filename + ".raw");
         method->run();
 
+        cout << "==============================================" << '\n';
+
         WindowManagement window_management;
         window_management.init();
 
@@ -33,7 +35,7 @@ int main()
 
         window_management.main_loop(mesh, shader);
 
-        cout << "==============================================" << '\n';
+        delete method;
     }
 
     return 0;

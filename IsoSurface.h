@@ -6,7 +6,6 @@
 #include <string>
 
 #include "Method.h"
-#include "Volume.h"
 
 using namespace std;
 
@@ -15,9 +14,9 @@ class IsoSurface : public Method {
 
 private:
 	float iso_value;
+	vector<GLfloat> _vertex;
 
 	pair<glm::vec3, glm::vec3> interpolation(glm::ivec3 p1, glm::ivec3 p2);
-	void calculate();
 
 public:
 	IsoSurface(string inf_file, string raw_file);
@@ -25,6 +24,7 @@ public:
 	~IsoSurface();
 
 	void run() override;
+	vector<GLfloat>& vertex() override;
 	vector<int> attribute() override;
 	GLenum render_mode() override;
 };
