@@ -1,6 +1,7 @@
 #include "Mesh.h"
 
 #include <numeric>
+#include <iostream>
 
 using namespace std;
 
@@ -8,20 +9,24 @@ Mesh::Mesh()
 {
     this->stride = 1;
     this->attribute.resize(1, 0);
+    this->render_mode = GL_POINTS;
     this->shape = glm::vec3(0.0);
-    this->render_mode = GL_TRIANGLES;
+
+    this->_color = glm::vec4(1.0);
 
     this->vertex.clear();
     this->vertex.shrink_to_fit();
 }
 
-Mesh::Mesh(vector<GLfloat> &vertex, vector<int> attribute, glm::vec3 shape, GLenum render_mode) : Mesh::Mesh()
+Mesh::Mesh(Method *method, glm::vec4 color) : Mesh::Mesh()
 {
-    this->vertex = vertex;
-    this->attribute = attribute;
-    this->shape = shape;
-    this->render_mode = render_mode;
+    this->vertex = method->vertex();
+    this->attribute = method->attribute();
+    this->render_mode = method->render_mode();
+    this->shape = method->volume_shape();
     this->stride = accumulate(this->attribute.begin(), this->attribute.end(), 0);
+
+    this->_color = color;
 
     if (this->stride == 0) this->stride = 1;
 }
@@ -49,6 +54,11 @@ void Mesh::init()
 void Mesh::transform(Transformation &transformation)
 {
     transformation.set_model(TRANSFORMATION::TRANSLATE, -1.0f * this->shape / 2.0f);
+}
+
+void Mesh::color(Shader &shader)
+{
+    shader.set_uniform("object_color", this->_color);
 }
 
 void Mesh::draw(GLenum rasterize_mode)

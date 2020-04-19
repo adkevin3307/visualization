@@ -21,11 +21,10 @@ private:
 
 public:
 	IsoSurface(string inf_file, string raw_file);
+	IsoSurface(string inf_file, string raw_file, float iso_value);
 	~IsoSurface();
 
-	void run();
-	void run(float value);
-
+	void run() override;
 	vector<int> attribute() override;
 	GLenum render_mode() override;
 };

@@ -1,9 +1,12 @@
-#include "WindowManagement.h"
+#include "Method.h"
 #include "IsoSurface.h"
+#include "WindowManagement.h"
 #include "Shader.h"
 #include "Mesh.h"
 
+#include <glm/glm.hpp>
 #include <iostream>
+#include <vector>
 #include <string>
 
 using namespace std;
@@ -14,8 +17,8 @@ int main()
     while (cout << "filename: ", cin >> filename) {
         cout << "==================== INFO ====================" << '\n';
 
-        IsoSurface iso_surface("./Data/Scalar/" + filename + ".inf", "./Data/Scalar/" + filename + ".raw");
-        iso_surface.run();
+        Method *method = new IsoSurface("./Data/Scalar/" + filename + ".inf", "./Data/Scalar/" + filename + ".raw");
+        method->run();
 
         WindowManagement window_management;
         window_management.init();
@@ -23,8 +26,10 @@ int main()
         Shader shader("./src/shader/vertex.glsl", "./src/shader/fragment.glsl");
         shader.use();
 
-        Mesh mesh(iso_surface.vertex(), iso_surface.attribute(), iso_surface.volume_shape(), iso_surface.render_mode());
-        mesh.init();
+        vector<Mesh> mesh{Mesh(method, glm::vec4(0.41, 0.37, 0.89, 1.0))};
+        for (size_t i = 0; i < mesh.size(); i++) {
+            mesh[i].init();
+        }
 
         window_management.main_loop(mesh, shader);
 

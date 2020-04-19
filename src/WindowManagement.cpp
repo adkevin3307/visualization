@@ -138,7 +138,7 @@ void WindowManagement::init()
     this->set_callback();
 }
 
-void WindowManagement::main_loop(Mesh &mesh, Shader &shader)
+void WindowManagement::main_loop(vector<Mesh> &mesh, Shader &shader)
 {
     float clip_normal[] = {0.0, 0.0, 0.0}, clip_distance = 1.0;
     while (!glfwWindowShouldClose(this->window)) {
@@ -156,12 +156,6 @@ void WindowManagement::main_loop(Mesh &mesh, Shader &shader)
         ImGui::SliderFloat("Clip Plane Distanse", &clip_distance, -150.0, 150.0);
         ImGui::End();
 
-        Transformation transformation(shader);
-        transformation.set_projection(WIDTH, HEIGHT, this->rate, 0.0, 500.0);
-        transformation.set_view(this->camera.view_matrix());
-        mesh.transform(transformation);
-        transformation.set();
-
         glm::vec3 clip_plane = glm::make_vec3(clip_normal);
         if (glm::length(clip_plane) > EPSILON) clip_plane = glm::normalize(clip_plane);
         shader.set_uniform("clip_plane", glm::vec4(clip_plane, clip_distance));
@@ -170,11 +164,16 @@ void WindowManagement::main_loop(Mesh &mesh, Shader &shader)
         shader.set_uniform("light_pos", this->camera.position());
         shader.set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
 
-        shader.set_uniform("object_color", glm::vec4(0.41, 0.37, 0.89, 1.0));
-        mesh.draw(GL_FILL);
+        for (size_t i = 0; i < mesh.size(); i++) {
+            Transformation transformation(shader);
+            transformation.set_projection(WIDTH, HEIGHT, this->rate, 0.0, 500.0);
+            transformation.set_view(this->camera.view_matrix());
+            mesh[i].transform(transformation);
+            transformation.set();
 
-        shader.set_uniform("object_color", glm::vec4(0.36, 0.32, 0.84, 1.0));
-        mesh.draw(GL_LINE);
+            mesh[i].color(shader);
+            mesh[i].draw(GL_FILL);
+        }
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

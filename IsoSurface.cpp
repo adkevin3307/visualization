@@ -11,8 +11,11 @@ using namespace std;
 IsoSurface::IsoSurface(string inf_file, string raw_file) : super::Method(inf_file, raw_file)
 {
     this->iso_value = super::volume.average();
+}
 
-    super::volume.show();
+IsoSurface::IsoSurface(string inf_file, string raw_file, float iso_value) : super::Method(inf_file, raw_file)
+{
+    this->iso_value = iso_value;
 }
 
 IsoSurface::~IsoSurface()
@@ -49,8 +52,11 @@ pair<glm::vec3, glm::vec3> IsoSurface::interpolation(glm::ivec3 p1, glm::ivec3 p
     return make_pair(coordinate_temp * voxel_size, normal_temp);
 }
 
-void IsoSurface::calculate()
+void IsoSurface::run()
 {
+    super::volume.show();
+    cout << "iso value: " << this->iso_value << '\n';
+
     vector<pair<glm::vec3, glm::vec3>> v(12);
 
     super::_vertex.clear();
@@ -98,20 +104,7 @@ void IsoSurface::calculate()
         }
     }
 
-    cout << "iso value: " << this->iso_value << '\n';
     cout << "vertex size: " << super::_vertex.size() << '\n';
-}
-
-void IsoSurface::run()
-{
-    this->calculate();
-}
-
-void IsoSurface::run(float value)
-{
-    this->iso_value = value;
-
-    this->calculate();
 }
 
 vector<int> IsoSurface::attribute()

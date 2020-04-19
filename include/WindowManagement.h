@@ -31,6 +31,6 @@ public:
     ~WindowManagement();
 
     void init();
-    void main_loop(Mesh &mesh, Shader &shader);
+    void main_loop(vector<Mesh> &mesh, Shader &shader);
     void terminate();
 };

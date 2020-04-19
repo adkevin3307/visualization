@@ -4,8 +4,10 @@
 #include <glm/glm.hpp>
 #include <vector>
 
+#include "Shader.h"
 #include "Transformation.h"
 #include "BufferManagement.h"
+#include "Method.h"
 
 using namespace std;
 
@@ -14,16 +16,18 @@ private:
     int stride;
     Buffer buffer;
     glm::vec3 shape;
+    glm::vec4 _color;
     GLenum render_mode;
-    vector<GLfloat> vertex;
     vector<int> attribute;
+    vector<GLfloat> vertex;
 
 public:
     Mesh();
-    Mesh(vector<GLfloat> &vertex, vector<int> attribute, glm::vec3 shape = glm::vec3(0.0), GLenum render_mode = GL_TRIANGLES);
+    Mesh(Method *method, glm::vec4 color);
     ~Mesh();
 
     void init();
     void transform(Transformation &transformation);
+    void color(Shader &shader);
     void draw(GLenum rasterize_mode);
 };
