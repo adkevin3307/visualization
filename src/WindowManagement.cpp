@@ -132,6 +132,9 @@ void WindowManagement::init()
 
     glEnable(GL_DEPTH_TEST);
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     this->set_callback();
 }
 
@@ -167,10 +170,10 @@ void WindowManagement::main_loop(Mesh &mesh, Shader &shader)
         shader.set_uniform("light_pos", this->camera.position());
         shader.set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
 
-        shader.set_uniform("object_color", glm::vec3(0.41, 0.37, 0.89));
+        shader.set_uniform("object_color", glm::vec4(0.41, 0.37, 0.89, 1.0));
         mesh.draw(GL_FILL);
 
-        shader.set_uniform("object_color", glm::vec3(0.36, 0.32, 0.84));
+        shader.set_uniform("object_color", glm::vec4(0.36, 0.32, 0.84, 1.0));
         mesh.draw(GL_LINE);
 
         ImGui::Render();
