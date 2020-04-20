@@ -70,6 +70,11 @@ void WindowManagement::mouse_callback(GLFWwindow *window, double xpos, double yp
 
 void WindowManagement::scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
+    if (ImGui::IsAnyWindowHovered()) {
+        ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
+        return;
+    }
+
     this->rate += yoffset;
     if (this->rate < 0.1) this->rate = 0.1;
 }
@@ -224,6 +229,8 @@ void WindowManagement::main_loop(Shader &shader)
         ImGui::SliderFloat3("Clip Plane Normal", clip_normal, -1.0, 1.0);
         ImGui::SliderFloat("Clip Plane Distanse", &clip_distance, -150.0, 150.0);
         ImGui::End();
+
+        // ImGui::ShowDemoWindow();
 
         glm::vec3 clip_plane = glm::make_vec3(clip_normal);
         if (glm::length(clip_plane) > EPSILON) clip_plane = glm::normalize(clip_plane);
