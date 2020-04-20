@@ -16,6 +16,7 @@ class WindowManagement {
 private:
     double last_xpos, last_ypos, rate;
     Camera camera;
+    vector<Mesh> mesh;
     GLFWwindow *window;
 
     static void error_callback(int error, const char *description);
@@ -26,11 +27,13 @@ private:
 
     void set_callback();
 
+    vector<string> all_files();
+    void load(string filename);
+
 public:
     WindowManagement();
     ~WindowManagement();
 
     void init();
-    void main_loop(vector<Mesh> &mesh, Shader &shader);
-    void terminate();
+    void main_loop(Shader &shader);
 };

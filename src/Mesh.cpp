@@ -53,6 +53,7 @@ void Mesh::init()
 
 void Mesh::transform(Transformation &transformation)
 {
+    transformation.init(TRANSFORMATION::MODEL);
     transformation.set_model(TRANSFORMATION::TRANSLATE, -1.0f * this->shape / 2.0f);
 }
 

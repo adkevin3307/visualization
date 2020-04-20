@@ -6,9 +6,9 @@ using namespace std;
 
 Transformation::Transformation(Shader shader)
 {
-    this->_model = glm::mat4(1.0f);
-    this->_view = glm::mat4(1.0f);
-    this->_projection = glm::mat4(1.0f);
+    this->_model = glm::mat4(1.0);
+    this->_view = glm::mat4(1.0);
+    this->_projection = glm::mat4(1.0);
 
     this->shader = shader;
 }
@@ -16,6 +16,28 @@ Transformation::Transformation(Shader shader)
 Transformation::~Transformation()
 {
 
+}
+
+void Transformation::init(TRANSFORMATION type)
+{
+    switch (type) {
+    case TRANSFORMATION::MODEL:
+        this->_model = glm::mat4(1.0);
+        break;
+    case TRANSFORMATION::VIEW:
+        this->_view = glm::mat4(1.0);
+        break;
+    case TRANSFORMATION::PROJECTION:
+        this->_projection = glm::mat4(1.0);
+        break;
+    case TRANSFORMATION::MODEL_VIEW_PROJECTION:
+        this->_model = glm::mat4(1.0);
+        this->_view = glm::mat4(1.0);
+        this->_projection = glm::mat4(1.0);
+        break;
+    default:
+        break;
+    }
 }
 
 void Transformation::set_model(TRANSFORMATION type, glm::vec3 v, float angle)

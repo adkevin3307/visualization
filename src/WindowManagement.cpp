@@ -5,11 +5,15 @@
 #include <glm/ext.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
+#include <imgui/imgui_stdlib.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 #include <iostream>
 #include <stdexcept>
+#include <dirent.h>
 
+#include "Method.h"
+#include "IsoSurface.h"
 #include "Transformation.h"
 
 using namespace std;
@@ -96,6 +100,51 @@ void WindowManagement::set_callback()
     glfwSetScrollCallback(this->window, scrollCallback);
 }
 
+vector<string> WindowManagement::all_files()
+{
+    DIR *dp;
+    dirent *dirp;
+    vector<string> result;
+
+    if ((dp = opendir("./Data/Scalar/")) != NULL) {
+        while ((dirp = readdir(dp)) != NULL) {
+            string temp = dirp->d_name;
+            size_t index = temp.find(".inf");
+
+            if (index != string::npos) result.push_back(temp.substr(0, index));
+        }
+    }
+
+    return result;
+}
+
+void WindowManagement::load(string filename)
+{
+    // this->mesh.clear();
+    // this->mesh.shrink_to_fit();
+
+    Method *method;
+
+    cout << "==================== Info ====================" << '\n';
+
+    try {
+        method = new IsoSurface("./Data/Scalar/" + filename + ".inf", "./Data/Scalar/" + filename + ".raw");
+        method->run();
+
+        this->mesh.push_back(Mesh(method, glm::vec4(0.41, 0.37, 0.89, 1.0)));
+        for (size_t i = 0; i < this->mesh.size(); i++) {
+            this->mesh[i].init();
+        }
+
+        delete method;
+    }
+    catch (const runtime_error &error) {
+        cerr << error.what() << '\n';
+    }
+
+    cout << "==============================================" << '\n';
+}
+
 void WindowManagement::init()
 {
     glfwSetErrorCallback(WindowManagement::error_callback);
@@ -138,9 +187,13 @@ void WindowManagement::init()
     this->set_callback();
 }
 
-void WindowManagement::main_loop(vector<Mesh> &mesh, Shader &shader)
+void WindowManagement::main_loop(Shader &shader)
 {
+    string filename = "engine";
+    vector<string> filenames = this->all_files();
+
     float clip_normal[] = {0.0, 0.0, 0.0}, clip_distance = 1.0;
+
     while (!glfwWindowShouldClose(this->window)) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -150,8 +203,24 @@ void WindowManagement::main_loop(vector<Mesh> &mesh, Shader &shader)
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // render your GUI
+        // GUI
         ImGui::Begin("Controller");
+        ImGui::SetWindowFontScale(1.2);
+
+        if (ImGui::BeginCombo("", filename.c_str())) {
+            for (size_t i = 0; i < filenames.size(); i++) {
+                bool selected = (filename == filenames[i]);
+
+                if (ImGui::Selectable(filenames[i].c_str(), selected)) filename = filenames[i];
+                if (selected) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+        ImGui::SameLine();
+
+        if (ImGui::Button("Load")) this->load(filename);
+
+        ImGui::SetWindowFontScale(1.0);
         ImGui::SliderFloat3("Clip Plane Normal", clip_normal, -1.0, 1.0);
         ImGui::SliderFloat("Clip Plane Distanse", &clip_distance, -150.0, 150.0);
         ImGui::End();
@@ -164,15 +233,16 @@ void WindowManagement::main_loop(vector<Mesh> &mesh, Shader &shader)
         shader.set_uniform("light_pos", this->camera.position());
         shader.set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
 
-        for (size_t i = 0; i < mesh.size(); i++) {
-            Transformation transformation(shader);
-            transformation.set_projection(WIDTH, HEIGHT, this->rate, 0.0, 500.0);
-            transformation.set_view(this->camera.view_matrix());
-            mesh[i].transform(transformation);
+        Transformation transformation(shader);
+        transformation.set_projection(WIDTH, HEIGHT, this->rate, 0.0, 500.0);
+        transformation.set_view(this->camera.view_matrix());
+
+        for (size_t i = 0; i < this->mesh.size(); i++) {
+            this->mesh[i].transform(transformation);
             transformation.set();
 
-            mesh[i].color(shader);
-            mesh[i].draw(GL_FILL);
+            this->mesh[i].color(shader);
+            this->mesh[i].draw(GL_FILL);
         }
 
         ImGui::Render();
@@ -186,6 +256,6 @@ void WindowManagement::main_loop(vector<Mesh> &mesh, Shader &shader)
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    glfwDestroyWindow(window);
+    glfwDestroyWindow(this->window);
     glfwTerminate();
 }
