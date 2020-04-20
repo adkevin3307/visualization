@@ -36,6 +36,7 @@ void WindowManagement::error_callback(int error, const char *description)
 
 void WindowManagement::framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
+    ImGui::SetWindowSize("Controller", ImVec2(width / 3.0, height / 3.0));
     glViewport(0, 0, width, height);
 }
 
@@ -174,8 +175,8 @@ void WindowManagement::init()
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_::ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_::ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -194,6 +195,8 @@ void WindowManagement::init()
 
 void WindowManagement::main_loop(Shader &shader)
 {
+    bool open = true;
+
     string filename = "engine";
     vector<string> filenames = this->all_files();
 
@@ -208,8 +211,11 @@ void WindowManagement::main_loop(Shader &shader)
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // GUI
-        ImGui::Begin("Controller");
+        ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Once);
+        ImGui::SetNextWindowSize(ImVec2(WIDTH / 3, HEIGHT / 3), ImGuiCond_Once);
+
+        // render GUI
+        ImGui::Begin("Controller", &open, ImGuiWindowFlags_NoMove);
         ImGui::SetWindowFontScale(1.2);
 
         if (ImGui::BeginCombo("", filename.c_str())) {
