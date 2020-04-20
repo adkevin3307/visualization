@@ -126,9 +126,6 @@ vector<string> WindowManagement::all_files()
 
 void WindowManagement::load(string filename)
 {
-    // this->mesh.clear();
-    // this->mesh.shrink_to_fit();
-
     Method *method;
 
     cout << "==================== Info ====================" << '\n';
@@ -227,16 +224,23 @@ void WindowManagement::main_loop(Shader &shader)
             }
             ImGui::EndCombo();
         }
-        ImGui::SameLine();
 
+        ImGui::SameLine();
+        if (ImGui::Button("Clean")) this->mesh.clear();
+
+        ImGui::SameLine();
         if (ImGui::Button("Load")) this->load(filename);
 
         ImGui::SetWindowFontScale(1.0);
         ImGui::SliderFloat3("Clip Plane Normal", clip_normal, -1.0, 1.0);
         ImGui::SliderFloat("Clip Plane Distanse", &clip_distance, -150.0, 150.0);
+
         ImGui::End();
 
         // ImGui::ShowDemoWindow();
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glm::vec3 clip_plane = glm::make_vec3(clip_normal);
         if (glm::length(clip_plane) > EPSILON) clip_plane = glm::normalize(clip_plane);
@@ -257,9 +261,6 @@ void WindowManagement::main_loop(Shader &shader)
             this->mesh[i].color(shader);
             this->mesh[i].draw(GL_FILL);
         }
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(this->window);
         glfwPollEvents();

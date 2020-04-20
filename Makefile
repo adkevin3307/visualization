@@ -29,7 +29,7 @@ ifeq ($(OS), Windows_NT)
 
 	mkdir = if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)
 
-	rm = del /S /Q *.exe *.out Data\Scalar\histogram.txt & rmdir /S /Q $(OBJ_DIR)
+	rm = del /S /Q *.exe *.out imgui.ini Data\Scalar\histogram.txt & rmdir /S /Q $(OBJ_DIR)
 else ifeq ($(findstring Microsoft, $(shell uname -a)), Microsoft)
 	CXX = cmd.exe /C g++
 	EXE = main.exe
@@ -38,13 +38,13 @@ else ifeq ($(findstring Microsoft, $(shell uname -a)), Microsoft)
 
 	mkdir = mkdir -p $(OBJ_DIR)
 
-	rm = rm -rf *.exe *.out $(OBJ_DIR) Data/Scalar/histogram.txt
+	rm = rm -rf *.exe *.out imgui.ini $(OBJ_DIR) Data/Scalar/histogram.txt
 else
 	LIBS += -lglfw3 -pthread -lXrandr -lXxf86vm -lXi -lXinerama -lX11 -ldl -lXcursor
 
 	mkdir = mkdir -p $(OBJ_DIR)
 
-	rm = rm -rf *.exe *.out $(OBJ_DIR) Data/Scalar/histogram.txt
+	rm = rm -rf *.exe *.out imgui.ini $(OBJ_DIR) Data/Scalar/histogram.txt
 endif
 
 $(OBJ_DIR)/%.o: %.cpp
