@@ -107,26 +107,6 @@ void WindowManagement::set_callback()
     glfwSetScrollCallback(this->window, scrollCallback);
 }
 
-vector<string> WindowManagement::all_files()
-{
-    DIR *dp;
-    dirent *dirp;
-    vector<string> result;
-
-    if ((dp = opendir("./Data/Scalar/")) != NULL) {
-        while ((dirp = readdir(dp)) != NULL) {
-            string temp = dirp->d_name;
-            size_t index = temp.find(".inf");
-
-            if (index != string::npos) result.push_back(temp.substr(0, index));
-        }
-    }
-
-    sort(result.begin(), result.end());
-
-    return result;
-}
-
 void WindowManagement::load(string filename, METHOD method)
 {
     Method *render_method;
@@ -143,9 +123,9 @@ void WindowManagement::load(string filename, METHOD method)
             break;
         }
 
-        this->mesh.push_back(make_pair(Mesh(render_method), method));
+        this->mesh.push_back(Mesh(render_method, method));
         for (size_t i = 0; i < this->mesh.size(); i++) {
-            this->mesh[i].first.init();
+            this->mesh[i].init();
         }
 
         delete render_method;
@@ -155,6 +135,88 @@ void WindowManagement::load(string filename, METHOD method)
     }
 
     cout << "==============================================" << '\n';
+}
+
+void generate_combo(map<string, METHOD> &methods, vector<string> &filenames)
+{
+    // generate methods combo
+    methods["Iso Surface"] = METHOD::ISOSURFACE;
+
+    // generate filenames combo
+    DIR *dp;
+    dirent *dirp;
+
+    if ((dp = opendir("./Data/Scalar/")) != NULL) {
+        while ((dirp = readdir(dp)) != NULL) {
+            string temp = dirp->d_name;
+            size_t index = temp.find(".inf");
+
+            if (index != string::npos) filenames.push_back(temp.substr(0, index));
+        }
+    }
+
+    sort(filenames.begin(), filenames.end());
+}
+
+void WindowManagement::set_gui(glm::vec4 &clip_plane)
+{
+    static bool flag = true;
+
+    static string method = "Iso Surface";
+    static map<string, METHOD> methods;
+
+    static string filename = "engine";
+    static vector<string> filenames;
+
+    static float clip_normal[] = {0.0, 0.0, 0.0}, clip_distance = 1.0;
+
+    if (flag) generate_combo(methods, filenames);
+    flag = false;
+
+    // set Controller position and size
+    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(WIDTH / 3, HEIGHT / 3), ImGuiCond_Once);
+
+    // render GUI
+    ImGui::Begin("Controller");
+    ImGui::SetWindowFontScale(1.2);
+
+    if (ImGui::BeginCombo("## Method", method.c_str())) {
+        for (auto it = methods.begin(); it != methods.end(); it++) {
+            bool selected = (method == it->first);
+
+            if (ImGui::Selectable(it->first.c_str(), selected)) method = it->first;
+            if (selected) ImGui::SetItemDefaultFocus();
+        }
+
+        ImGui::EndCombo();
+    }
+
+    if (ImGui::BeginCombo("## Filename", filename.c_str())) {
+        for (size_t i = 0; i < filenames.size(); i++) {
+            bool selected = (filename == filenames[i]);
+
+            if (ImGui::Selectable(filenames[i].c_str(), selected)) filename = filenames[i];
+            if (selected) ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Clean")) this->mesh.clear();
+
+    ImGui::SameLine();
+    if (ImGui::Button("Load")) this->load(filename, methods[method]);
+
+    ImGui::SetWindowFontScale(1.0);
+    ImGui::SliderFloat3("Clip Plane Normal", clip_normal, -1.0, 1.0);
+    ImGui::SliderFloat("Clip Plane Distanse", &clip_distance, -150.0, 150.0);
+
+    ImGui::End();
+
+    glm::vec3 temp = glm::make_vec3(clip_normal);
+    if (glm::length(temp) > EPSILON) temp = glm::normalize(temp);
+    clip_plane = glm::vec4(temp, clip_distance);
 }
 
 void WindowManagement::init()
@@ -207,16 +269,7 @@ void WindowManagement::init()
 
 void WindowManagement::main_loop()
 {
-    bool open = true;
-
-    string method = "Iso Surface";
-    map<string, METHOD> methods;
-    methods["Iso Surface"] = METHOD::ISOSURFACE;
-
-    string filename = "engine";
-    vector<string> filenames = this->all_files();
-
-    float clip_normal[] = {0.0, 0.0, 0.0}, clip_distance = 1.0;
+    glm::vec4 clip_plane;
 
     while (!glfwWindowShouldClose(this->window)) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -227,65 +280,24 @@ void WindowManagement::main_loop()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Once);
-        ImGui::SetNextWindowSize(ImVec2(WIDTH / 3, HEIGHT / 3), ImGuiCond_Once);
-
-        // render GUI
-        ImGui::Begin("Controller", &open, ImGuiWindowFlags_NoMove);
-        ImGui::SetWindowFontScale(1.2);
-
-        if (ImGui::BeginCombo("## Method", method.c_str())) {
-            for (auto it = methods.begin(); it != methods.end(); it++) {
-                bool selected = (method == it->first);
-
-                if (ImGui::Selectable(it->first.c_str(), selected)) method = it->first;
-                if (selected) ImGui::SetItemDefaultFocus();
-            }
-
-            ImGui::EndCombo();
-        }
-
-        if (ImGui::BeginCombo("## Filename", filename.c_str())) {
-            for (size_t i = 0; i < filenames.size(); i++) {
-                bool selected = (filename == filenames[i]);
-
-                if (ImGui::Selectable(filenames[i].c_str(), selected)) filename = filenames[i];
-                if (selected) ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
-
-        ImGui::SameLine();
-        if (ImGui::Button("Clean")) this->mesh.clear();
-
-        ImGui::SameLine();
-        if (ImGui::Button("Load")) this->load(filename, methods[method]);
-
-        ImGui::SetWindowFontScale(1.0);
-        ImGui::SliderFloat3("Clip Plane Normal", clip_normal, -1.0, 1.0);
-        ImGui::SliderFloat("Clip Plane Distanse", &clip_distance, -150.0, 150.0);
-
-        ImGui::End();
+        this->set_gui(clip_plane);
 
         for (size_t i = 0; i < this->mesh.size(); i++) {
-            glm::vec3 clip_plane = glm::make_vec3(clip_normal);
-            if (glm::length(clip_plane) > EPSILON) clip_plane = glm::normalize(clip_plane);
+            this->shader_map[mesh[i].method()].set_uniform("clip_plane", clip_plane);
 
-            this->shader_map[mesh[i].second].set_uniform("clip_plane", glm::vec4(clip_plane, clip_distance));
+            this->shader_map[mesh[i].method()].set_uniform("view_pos", this->camera.position());
+            this->shader_map[mesh[i].method()].set_uniform("light_pos", this->camera.position());
+            this->shader_map[mesh[i].method()].set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
 
-            this->shader_map[mesh[i].second].set_uniform("view_pos", this->camera.position());
-            this->shader_map[mesh[i].second].set_uniform("light_pos", this->camera.position());
-            this->shader_map[mesh[i].second].set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
-
-            Transformation transformation(this->shader_map[mesh[i].second]);
+            Transformation transformation(this->shader_map[mesh[i].method()]);
             transformation.set_projection(WIDTH, HEIGHT, this->rate, 0.0, 500.0);
             transformation.set_view(this->camera.view_matrix());
 
-            this->mesh[i].first.transform(transformation);
+            this->mesh[i].transform(transformation);
             transformation.set();
 
-            this->shader_map[this->mesh[i].second].set_uniform("object_color", glm::vec4(0.41, 0.37, 0.89, 1.0));
-            this->mesh[i].first.draw(GL_FILL);
+            this->shader_map[this->mesh[i].method()].set_uniform("object_color", glm::vec4(0.41, 0.37, 0.89, 1.0));
+            this->mesh[i].draw(GL_FILL);
         }
 
         ImGui::Render();

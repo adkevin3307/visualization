@@ -1,5 +1,7 @@
 #pragma once
 
+#include "constant.h"
+
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <vector>
@@ -18,11 +20,14 @@ private:
     GLenum render_mode;
     vector<int> attribute;
     vector<GLfloat> vertex;
+    METHOD _method;
 
 public:
     Mesh();
-    Mesh(Method *method);
+    Mesh(Method *render_method, METHOD method);
     ~Mesh();
+
+    METHOD method();
 
     void init();
     void transform(Transformation &transformation);

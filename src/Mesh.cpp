@@ -16,12 +16,15 @@ Mesh::Mesh()
     this->vertex.shrink_to_fit();
 }
 
-Mesh::Mesh(Method *method) : Mesh::Mesh()
+Mesh::Mesh(Method *render_method, METHOD method) : Mesh::Mesh()
 {
-    this->vertex = method->vertex();
-    this->attribute = method->attribute();
-    this->render_mode = method->render_mode();
-    this->shape = method->volume_shape();
+    this->vertex = render_method->vertex();
+    this->attribute = render_method->attribute();
+    this->render_mode = render_method->render_mode();
+    this->shape = render_method->volume_shape();
+
+    this->_method = method;
+
     this->stride = accumulate(this->attribute.begin(), this->attribute.end(), 0);
 
     if (this->stride == 0) this->stride = 1;
@@ -30,6 +33,11 @@ Mesh::Mesh(Method *method) : Mesh::Mesh()
 Mesh::~Mesh()
 {
 
+}
+
+METHOD Mesh::method()
+{
+    return this->_method;
 }
 
 void Mesh::init()

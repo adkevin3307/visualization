@@ -6,7 +6,6 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <iomanip>
 
 #include "Camera.h"
 #include "Shader.h"
@@ -19,7 +18,7 @@ private:
     double last_xpos, last_ypos, rate;
     Camera camera;
     map<METHOD, Shader> shader_map;
-    vector<pair<Mesh, METHOD>> mesh;
+    vector<Mesh> mesh;
     GLFWwindow *window;
 
     static void error_callback(int error, const char *description);
@@ -30,8 +29,8 @@ private:
 
     void set_callback();
 
-    vector<string> all_files();
     void load(string filename, METHOD method);
+    void set_gui(glm::vec4 &clip_plane);
 
 public:
     WindowManagement();
