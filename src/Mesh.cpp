@@ -53,11 +53,6 @@ void Mesh::transform(Transformation &transformation)
     transformation.set_model(TRANSFORMATION::TRANSLATE, -1.0f * this->shape / 2.0f);
 }
 
-void Mesh::color(Shader &shader, glm::vec4 color)
-{
-    shader.set_uniform("object_color", color);
-}
-
 void Mesh::draw(GLenum rasterize_mode)
 {
     BufferManagement::bind(this->buffer);

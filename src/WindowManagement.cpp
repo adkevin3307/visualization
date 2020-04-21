@@ -137,12 +137,11 @@ void WindowManagement::load(string filename, METHOD method)
         switch (method) {
         case (METHOD::ISOSURFACE):
             render_method = new IsoSurface("./Data/Scalar/" + filename + ".inf", "./Data/Scalar/" + filename + ".raw");
+            render_method->run();
             break;
         default:
             break;
         }
-
-        render_method->run();
 
         this->mesh.push_back(make_pair(Mesh(render_method), method));
         for (size_t i = 0; i < this->mesh.size(); i++) {
@@ -210,12 +209,12 @@ void WindowManagement::main_loop()
 {
     bool open = true;
 
+    string method = "Iso Surface";
+    map<string, METHOD> methods;
+    methods["Iso Surface"] = METHOD::ISOSURFACE;
+
     string filename = "engine";
     vector<string> filenames = this->all_files();
-
-    string method = "IsoSurface";
-    map<string, METHOD> methods;
-    methods["IsoSurface"] = METHOD::ISOSURFACE;
 
     float clip_normal[] = {0.0, 0.0, 0.0}, clip_distance = 1.0;
 
@@ -268,8 +267,6 @@ void WindowManagement::main_loop()
 
         ImGui::End();
 
-        // ImGui::ShowDemoWindow();
-
         for (size_t i = 0; i < this->mesh.size(); i++) {
             glm::vec3 clip_plane = glm::make_vec3(clip_normal);
             if (glm::length(clip_plane) > EPSILON) clip_plane = glm::normalize(clip_plane);
@@ -287,7 +284,7 @@ void WindowManagement::main_loop()
             this->mesh[i].first.transform(transformation);
             transformation.set();
 
-            this->mesh[i].first.color(this->shader_map[this->mesh[i].second]);
+            this->shader_map[this->mesh[i].second].set_uniform("object_color", glm::vec4(0.41, 0.37, 0.89, 1.0));
             this->mesh[i].first.draw(GL_FILL);
         }
 
