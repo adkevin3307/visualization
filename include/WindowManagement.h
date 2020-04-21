@@ -5,6 +5,8 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <string>
+#include <map>
+#include <iomanip>
 
 #include "Camera.h"
 #include "Shader.h"
@@ -16,7 +18,8 @@ class WindowManagement {
 private:
     double last_xpos, last_ypos, rate;
     Camera camera;
-    vector<Mesh> mesh;
+    map<METHOD, Shader> shader_map;
+    vector<pair<Mesh, METHOD>> mesh;
     GLFWwindow *window;
 
     static void error_callback(int error, const char *description);
@@ -28,12 +31,12 @@ private:
     void set_callback();
 
     vector<string> all_files();
-    void load(string filename);
+    void load(string filename, METHOD method);
 
 public:
     WindowManagement();
     ~WindowManagement();
 
     void init();
-    void main_loop(Shader &shader);
+    void main_loop();
 };

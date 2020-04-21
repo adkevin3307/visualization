@@ -30,6 +30,10 @@ enum TRANSFORMATION {
 	ROTATE
 };
 
+enum METHOD {
+	ISOSURFACE
+};
+
 const static double EPSILON = 1e-6;
 
 const static int WIDTH = 1440;

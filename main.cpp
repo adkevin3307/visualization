@@ -7,12 +7,9 @@ int main()
 {
 
     WindowManagement window_management;
+
     window_management.init();
-
-    Shader shader("./src/shader/vertex.glsl", "./src/shader/fragment.glsl");
-    shader.use();
-
-    window_management.main_loop(shader);
+    window_management.main_loop();
 
     return 0;
 }

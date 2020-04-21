@@ -9,6 +9,7 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 #include <iostream>
+#include <algorithm>
 #include <stdexcept>
 #include <dirent.h>
 
@@ -121,25 +122,34 @@ vector<string> WindowManagement::all_files()
         }
     }
 
+    sort(result.begin(), result.end());
+
     return result;
 }
 
-void WindowManagement::load(string filename)
+void WindowManagement::load(string filename, METHOD method)
 {
-    Method *method;
+    Method *render_method;
 
     cout << "==================== Info ====================" << '\n';
 
     try {
-        method = new IsoSurface("./Data/Scalar/" + filename + ".inf", "./Data/Scalar/" + filename + ".raw");
-        method->run();
-
-        this->mesh.push_back(Mesh(method));
-        for (size_t i = 0; i < this->mesh.size(); i++) {
-            this->mesh[i].init();
+        switch (method) {
+        case (METHOD::ISOSURFACE):
+            render_method = new IsoSurface("./Data/Scalar/" + filename + ".inf", "./Data/Scalar/" + filename + ".raw");
+            break;
+        default:
+            break;
         }
 
-        delete method;
+        render_method->run();
+
+        this->mesh.push_back(make_pair(Mesh(render_method), method));
+        for (size_t i = 0; i < this->mesh.size(); i++) {
+            this->mesh[i].first.init();
+        }
+
+        delete render_method;
     }
     catch (const runtime_error &error) {
         cerr << error.what() << '\n';
@@ -188,14 +198,24 @@ void WindowManagement::init()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     this->set_callback();
+
+    this->shader_map[METHOD::ISOSURFACE] = Shader("./src/shader/vertex.glsl", "./src/shader/fragment.glsl");
+
+    for (auto it = this->shader_map.begin(); it != this->shader_map.end(); it++) {
+        it->second.use();
+    }
 }
 
-void WindowManagement::main_loop(Shader &shader)
+void WindowManagement::main_loop()
 {
     bool open = true;
 
     string filename = "engine";
     vector<string> filenames = this->all_files();
+
+    string method = "IsoSurface";
+    map<string, METHOD> methods;
+    methods["IsoSurface"] = METHOD::ISOSURFACE;
 
     float clip_normal[] = {0.0, 0.0, 0.0}, clip_distance = 1.0;
 
@@ -215,7 +235,18 @@ void WindowManagement::main_loop(Shader &shader)
         ImGui::Begin("Controller", &open, ImGuiWindowFlags_NoMove);
         ImGui::SetWindowFontScale(1.2);
 
-        if (ImGui::BeginCombo("", filename.c_str())) {
+        if (ImGui::BeginCombo("## Method", method.c_str())) {
+            for (auto it = methods.begin(); it != methods.end(); it++) {
+                bool selected = (method == it->first);
+
+                if (ImGui::Selectable(it->first.c_str(), selected)) method = it->first;
+                if (selected) ImGui::SetItemDefaultFocus();
+            }
+
+            ImGui::EndCombo();
+        }
+
+        if (ImGui::BeginCombo("## Filename", filename.c_str())) {
             for (size_t i = 0; i < filenames.size(); i++) {
                 bool selected = (filename == filenames[i]);
 
@@ -229,7 +260,7 @@ void WindowManagement::main_loop(Shader &shader)
         if (ImGui::Button("Clean")) this->mesh.clear();
 
         ImGui::SameLine();
-        if (ImGui::Button("Load")) this->load(filename);
+        if (ImGui::Button("Load")) this->load(filename, methods[method]);
 
         ImGui::SetWindowFontScale(1.0);
         ImGui::SliderFloat3("Clip Plane Normal", clip_normal, -1.0, 1.0);
@@ -239,24 +270,25 @@ void WindowManagement::main_loop(Shader &shader)
 
         // ImGui::ShowDemoWindow();
 
-        glm::vec3 clip_plane = glm::make_vec3(clip_normal);
-        if (glm::length(clip_plane) > EPSILON) clip_plane = glm::normalize(clip_plane);
-        shader.set_uniform("clip_plane", glm::vec4(clip_plane, clip_distance));
-
-        shader.set_uniform("view_pos", this->camera.position());
-        shader.set_uniform("light_pos", this->camera.position());
-        shader.set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
-
-        Transformation transformation(shader);
-        transformation.set_projection(WIDTH, HEIGHT, this->rate, 0.0, 500.0);
-        transformation.set_view(this->camera.view_matrix());
-
         for (size_t i = 0; i < this->mesh.size(); i++) {
-            this->mesh[i].transform(transformation);
+            glm::vec3 clip_plane = glm::make_vec3(clip_normal);
+            if (glm::length(clip_plane) > EPSILON) clip_plane = glm::normalize(clip_plane);
+
+            this->shader_map[mesh[i].second].set_uniform("clip_plane", glm::vec4(clip_plane, clip_distance));
+
+            this->shader_map[mesh[i].second].set_uniform("view_pos", this->camera.position());
+            this->shader_map[mesh[i].second].set_uniform("light_pos", this->camera.position());
+            this->shader_map[mesh[i].second].set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
+
+            Transformation transformation(this->shader_map[mesh[i].second]);
+            transformation.set_projection(WIDTH, HEIGHT, this->rate, 0.0, 500.0);
+            transformation.set_view(this->camera.view_matrix());
+
+            this->mesh[i].first.transform(transformation);
             transformation.set();
 
-            this->mesh[i].color(shader);
-            this->mesh[i].draw(GL_FILL);
+            this->mesh[i].first.color(this->shader_map[this->mesh[i].second]);
+            this->mesh[i].first.draw(GL_FILL);
         }
 
         ImGui::Render();
