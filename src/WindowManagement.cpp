@@ -134,7 +134,7 @@ void WindowManagement::load(string filename)
         method = new IsoSurface("./Data/Scalar/" + filename + ".inf", "./Data/Scalar/" + filename + ".raw");
         method->run();
 
-        this->mesh.push_back(Mesh(method, glm::vec4(0.41, 0.37, 0.89, 1.0)));
+        this->mesh.push_back(Mesh(method));
         for (size_t i = 0; i < this->mesh.size(); i++) {
             this->mesh[i].init();
         }
@@ -239,9 +239,6 @@ void WindowManagement::main_loop(Shader &shader)
 
         // ImGui::ShowDemoWindow();
 
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
         glm::vec3 clip_plane = glm::make_vec3(clip_normal);
         if (glm::length(clip_plane) > EPSILON) clip_plane = glm::normalize(clip_plane);
         shader.set_uniform("clip_plane", glm::vec4(clip_plane, clip_distance));
@@ -261,6 +258,9 @@ void WindowManagement::main_loop(Shader &shader)
             this->mesh[i].color(shader);
             this->mesh[i].draw(GL_FILL);
         }
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(this->window);
         glfwPollEvents();

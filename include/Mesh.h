@@ -16,18 +16,17 @@ private:
     int stride;
     Buffer buffer;
     glm::vec3 shape;
-    glm::vec4 _color;
     GLenum render_mode;
     vector<int> attribute;
     vector<GLfloat> vertex;
 
 public:
     Mesh();
-    Mesh(Method *method, glm::vec4 color);
+    Mesh(Method *method);
     ~Mesh();
 
     void init();
     void transform(Transformation &transformation);
-    void color(Shader &shader);
+    void color(Shader &shader, glm::vec4 color = glm::vec4(0.41, 0.37, 0.89, 1.0));
     void draw(GLenum rasterize_mode);
 };
