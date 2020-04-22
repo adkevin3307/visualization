@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdexcept>
 #include <cctype>
+#include <map>
 
 using namespace std;
 

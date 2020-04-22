@@ -3,7 +3,6 @@
 #include "constant.h"
 
 #include <glm/glm.hpp>
-#include <map>
 #include <vector>
 #include <string>
 #include <cstring>

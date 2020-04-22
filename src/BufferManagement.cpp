@@ -1,6 +1,6 @@
 #include "BufferManagement.h"
 
-#include <stdint.h>
+#include <cstdint>
 
 using namespace std;
 

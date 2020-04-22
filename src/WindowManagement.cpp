@@ -2,6 +2,7 @@
 
 #include "constant.h"
 
+#include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>

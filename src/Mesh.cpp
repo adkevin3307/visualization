@@ -1,7 +1,6 @@
 #include "Mesh.h"
 
 #include <numeric>
-#include <iostream>
 
 using namespace std;
 

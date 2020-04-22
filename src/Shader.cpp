@@ -21,7 +21,6 @@ Shader::Shader(string vertex_path, string fragment_path)
     vertex_file.open(vertex_path, ios::in);
     fragment_file.open(fragment_path, ios::in);
 
-
     vertex_stream << vertex_file.rdbuf();
     fragment_stream << fragment_file.rdbuf();
 
