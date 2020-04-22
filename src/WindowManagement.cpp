@@ -158,9 +158,9 @@ void generate_combo(map<string, METHOD> &methods, vector<string> &filenames)
     sort(filenames.begin(), filenames.end());
 }
 
-void WindowManagement::set_gui(glm::vec4 &clip_plane)
+void WindowManagement::set_general()
 {
-    static bool flag = true;
+    static bool first_time = true;
 
     static string method = "Iso Surface";
     static map<string, METHOD> methods;
@@ -170,8 +170,8 @@ void WindowManagement::set_gui(glm::vec4 &clip_plane)
 
     static float clip_normal[] = {0.0, 0.0, 0.0}, clip_distance = 1.0;
 
-    if (flag) generate_combo(methods, filenames);
-    flag = false;
+    if (first_time) generate_combo(methods, filenames);
+    first_time = false;
 
     // set Controller position and size
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Once);
@@ -216,7 +216,15 @@ void WindowManagement::set_gui(glm::vec4 &clip_plane)
 
     glm::vec3 temp = glm::make_vec3(clip_normal);
     if (glm::length(temp) > EPSILON) temp = glm::normalize(temp);
-    clip_plane = glm::vec4(temp, clip_distance);
+    glm::vec4 clip_plane = glm::vec4(temp, clip_distance);
+
+    for (auto it = this->shader_map.begin(); it != this->shader_map.end(); it++) {
+        it->second.set_uniform("clip_plane", clip_plane);
+
+        it->second.set_uniform("view_pos", this->camera.position());
+        it->second.set_uniform("light_pos", this->camera.position());
+        it->second.set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));   
+    }
 }
 
 void WindowManagement::init()
@@ -269,26 +277,18 @@ void WindowManagement::init()
 
 void WindowManagement::main_loop()
 {
-    glm::vec4 clip_plane;
-
     while (!glfwWindowShouldClose(this->window)) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Start the Dear ImGui frame
+        // start imgui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        this->set_gui(clip_plane);
+        this->set_general();
 
         for (size_t i = 0; i < this->mesh.size(); i++) {
-            this->shader_map[mesh[i].method()].set_uniform("clip_plane", clip_plane);
-
-            this->shader_map[mesh[i].method()].set_uniform("view_pos", this->camera.position());
-            this->shader_map[mesh[i].method()].set_uniform("light_pos", this->camera.position());
-            this->shader_map[mesh[i].method()].set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
-
             Transformation transformation(this->shader_map[mesh[i].method()]);
             transformation.set_projection(WIDTH, HEIGHT, this->rate, 0.0, 500.0);
             transformation.set_view(this->camera.view_matrix());

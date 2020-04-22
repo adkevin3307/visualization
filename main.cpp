@@ -5,7 +5,6 @@ using namespace std;
 
 int main()
 {
-
     WindowManagement window_management;
 
     window_management.init();

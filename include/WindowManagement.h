@@ -30,7 +30,7 @@ private:
     void set_callback();
 
     void load(string filename, METHOD method);
-    void set_gui(glm::vec4 &clip_plane);
+    void set_general();
 
 public:
     WindowManagement();
