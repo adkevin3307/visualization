@@ -118,7 +118,7 @@ void WindowManagement::load(string filename, METHOD method)
         switch (method) {
         case (METHOD::ISOSURFACE):
             render_method = new IsoSurface("./Data/Scalar/" + filename + ".inf", "./Data/Scalar/" + filename + ".raw");
-            render_method->run();
+            ((IsoSurface*)render_method)->run();
             break;
         default:
             break;

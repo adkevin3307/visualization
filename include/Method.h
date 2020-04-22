@@ -19,7 +19,6 @@ public:
 
     glm::vec3 volume_shape();
 
-    virtual void run() = 0;
     virtual vector<GLfloat>& vertex() = 0;
     virtual vector<int> attribute() = 0;
     virtual GLenum render_mode() = 0;
