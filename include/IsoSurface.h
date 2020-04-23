@@ -24,7 +24,7 @@ public:
 	IsoSurface(string inf_file, string raw_file, float iso_value);
 	~IsoSurface();
 
-	void run() override;
+	void run();
 	vector<GLfloat>& vertex() override;
 	vector<int> attribute() override;
 	GLenum render_mode() override;

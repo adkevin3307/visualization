@@ -45,6 +45,7 @@ public:
     ~Volume();
 
     double average();
+    glm::vec2 limit_value();
     glm::ivec3 shape();
     glm::vec3 voxel_size();
     void show();

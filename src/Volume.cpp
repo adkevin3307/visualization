@@ -190,6 +190,11 @@ double Volume::average()
     return (this->_max_value + this->_min_value) / 2.0;
 }
 
+glm::vec2 Volume::limit_value()
+{
+    return glm::vec2(this->_min_value, this->_max_value);
+}
+
 glm::ivec3 Volume::shape()
 {
     return this->_shape;
