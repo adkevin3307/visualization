@@ -16,6 +16,7 @@
 
 #include "Method.h"
 #include "IsoSurface.h"
+#include "Slicing.h"
 #include "Transformation.h"
 
 using namespace std;
@@ -110,30 +111,47 @@ void WindowManagement::set_callback()
 
 void WindowManagement::load(string filename, METHOD method)
 {
-    Method *render_method;
+    Mesh mesh;
+    string inf_file = "./Data/Scalar/" + filename + ".inf", raw_file = "./Data/Scalar/" + filename + ".raw";
+
+    this->shader_map[method].use();
 
     cout << "==================== Info ====================" << '\n';
 
     try {
         switch (method) {
-        case (METHOD::ISOSURFACE):
-            render_method = new IsoSurface("./Data/Scalar/" + filename + ".inf", "./Data/Scalar/" + filename + ".raw");
-            ((IsoSurface*)render_method)->run();
+        case (METHOD::ISOSURFACE): {
+            IsoSurface iso_surface(inf_file, raw_file);
+            iso_surface.run();
+
+            mesh = Mesh((Method*)&iso_surface, METHOD::ISOSURFACE);
+            mesh.init();
+
             break;
+        }
+        case (METHOD::SLICING): {
+            Slicing slicing(inf_file, raw_file);
+            slicing.run();
+
+            mesh = Mesh((Method*)&slicing, METHOD::SLICING);
+            mesh.enable_texture(2);
+            mesh.init();
+            mesh.init_texture(GL_TEXTURE_1D, 0);
+            mesh.init_texture(GL_TEXTURE_3D, 1);
+            mesh.set_texture(0, slicing.texture_1d(), slicing.texture_1d_shape());
+            mesh.set_texture(1, slicing.texture_3d(), slicing.texture_3d_shape());
+
+            break;
+        }
         default:
             break;
         }
-
-        this->mesh.push_back(Mesh(render_method, method));
-        for (size_t i = 0; i < this->mesh.size(); i++) {
-            this->mesh[i].init();
-        }
-
-        delete render_method;
     }
     catch (const runtime_error &error) {
         cerr << error.what() << '\n';
     }
+
+    this->mesh.push_back(mesh);
 
     cout << "==============================================" << '\n';
 }
@@ -142,6 +160,7 @@ void generate_combo(map<string, METHOD> &methods, vector<string> &filenames)
 {
     // generate methods combo
     methods["Iso Surface"] = METHOD::ISOSURFACE;
+    methods["Slicing"] = METHOD::SLICING;
 
     // generate filenames combo
     DIR *dp;
@@ -162,6 +181,7 @@ void generate_combo(map<string, METHOD> &methods, vector<string> &filenames)
 void WindowManagement::set_general()
 {
     static bool first_time = true;
+    static bool click_load = false;
 
     static string method = "Iso Surface";
     static map<string, METHOD> methods;
@@ -207,7 +227,10 @@ void WindowManagement::set_general()
     if (ImGui::Button("Clean")) this->mesh.clear();
 
     ImGui::SameLine();
-    if (ImGui::Button("Load")) this->load(filename, methods[method]);
+    if (ImGui::Button("Load")) {
+        click_load = true;
+        this->load(filename, methods[method]);
+    }
 
     ImGui::SetWindowFontScale(1.0);
     ImGui::SliderFloat3("Clip Plane Normal", clip_normal, -1.0, 1.0);
@@ -219,12 +242,13 @@ void WindowManagement::set_general()
     if (glm::length(temp) > EPSILON) temp = glm::normalize(temp);
     glm::vec4 clip_plane = glm::vec4(temp, clip_distance);
 
-    for (auto it = this->shader_map.begin(); it != this->shader_map.end(); it++) {
-        it->second.set_uniform("clip_plane", clip_plane);
+    if (click_load) {
+        click_load = false;
 
-        it->second.set_uniform("view_pos", this->camera.position());
-        it->second.set_uniform("light_pos", this->camera.position());
-        it->second.set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));   
+        this->shader_map[methods[method]].set_uniform("clip_plane", clip_plane);
+        this->shader_map[methods[method]].set_uniform("view_pos", this->camera.position());
+        this->shader_map[methods[method]].set_uniform("light_pos", this->camera.position());
+        this->shader_map[methods[method]].set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
     }
 }
 
@@ -270,10 +294,7 @@ void WindowManagement::init()
     this->set_callback();
 
     this->shader_map[METHOD::ISOSURFACE] = Shader("./src/shader/vertex.glsl", "./src/shader/fragment.glsl");
-
-    for (auto it = this->shader_map.begin(); it != this->shader_map.end(); it++) {
-        it->second.use();
-    }
+    this->shader_map[METHOD::SLICING] = Shader("./src/shader/slicing_vertex.glsl", "./src/shader/slicing_fragment.glsl");
 }
 
 void WindowManagement::main_loop()
@@ -297,7 +318,9 @@ void WindowManagement::main_loop()
             this->mesh[i].transform(transformation);
             transformation.set();
 
-            this->shader_map[this->mesh[i].method()].set_uniform("object_color", glm::vec4(0.41, 0.37, 0.89, 1.0));
+            if (this->mesh[i].method() == METHOD::ISOSURFACE) {
+                this->shader_map[this->mesh[i].method()].set_uniform("object_color", glm::vec4(0.41, 0.37, 0.89, 1.0));
+            }
             this->mesh[i].draw(GL_FILL);
         }
 
