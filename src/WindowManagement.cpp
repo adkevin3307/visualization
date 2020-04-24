@@ -120,30 +120,30 @@ void WindowManagement::load(string filename, METHOD method)
 
     try {
         switch (method) {
-        case (METHOD::ISOSURFACE): {
-            IsoSurface iso_surface(inf_file, raw_file);
-            iso_surface.run();
+            case (METHOD::ISOSURFACE): {
+                IsoSurface iso_surface(inf_file, raw_file);
+                iso_surface.run();
 
-            mesh = Mesh((Method*)&iso_surface, METHOD::ISOSURFACE);
-            mesh.init();
-            break;
-        }
-        case (METHOD::SLICING): {
-            Slicing slicing(inf_file, raw_file);
-            slicing.run();
+                mesh = Mesh((Method*)&iso_surface, METHOD::ISOSURFACE);
+                mesh.init();
+                break;
+            }
+            case (METHOD::SLICING): {
+                Slicing slicing(inf_file, raw_file);
+                slicing.run();
 
-            mesh = Mesh((Method*)&slicing, METHOD::SLICING);
-            mesh.enable_texture(2);
-            mesh.init();
-            mesh.init_texture(GL_TEXTURE_1D, 0);
-            mesh.init_texture(GL_TEXTURE_3D, 1);
-            mesh.set_texture(0, slicing.texture_1d(), slicing.texture_1d_shape());
-            mesh.set_texture(1, slicing.texture_3d(), slicing.texture_3d_shape());
+                mesh = Mesh((Method*)&slicing, METHOD::SLICING);
+                mesh.enable_texture(2);
+                mesh.init();
+                mesh.init_texture(GL_TEXTURE_1D, 0);
+                mesh.init_texture(GL_TEXTURE_3D, 1);
+                mesh.set_texture(0, slicing.texture_1d(), slicing.texture_1d_shape());
+                mesh.set_texture(1, slicing.texture_3d(), slicing.texture_3d_shape());
 
-            break;
-        }
-        default:
-            break;
+                break;
+            }
+            default:
+                break;
         }
     }
     catch (const runtime_error &error) {
@@ -270,7 +270,7 @@ void WindowManagement::init()
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
 

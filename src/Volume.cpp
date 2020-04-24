@@ -126,29 +126,29 @@ void Volume::load_raw()
                 int index = (i * this->_shape.y * this->_shape.z + j * this->_shape.z + k) * this->byte_size;
 
                 switch (this->_type) {
-                case TYPE::FLOAT:
-                    this->data[i][j][k].first = this->handle_endian<float>(index, temp);
-                    break;
-                case TYPE::UNSIGNED_CHAR:
-                    this->data[i][j][k].first = (float)this->handle_endian<unsigned char>(index, temp);
-                    break;
-                case TYPE::CHAR:
-                    this->data[i][j][k].first = (float)this->handle_endian<char>(index, temp);
-                    break;
-                case TYPE::UNSIGNED_SHORT:
-                    this->data[i][j][k].first = (float)this->handle_endian<unsigned short>(index, temp);
-                    break;
-                case TYPE::SHORT:
-                    this->data[i][j][k].first = (float)this->handle_endian<short>(index, temp);
-                    break;
-                case TYPE::UNSIGNED_INT:
-                    this->data[i][j][k].first = (float)this->handle_endian<unsigned int>(index, temp);
-                    break;
-                case TYPE::INT:
-                    this->data[i][j][k].first = (float)this->handle_endian<int>(index, temp);
-                    break;
-                default:
-                    break;
+                    case TYPE::FLOAT:
+                        this->data[i][j][k].first = this->handle_endian<float>(index, temp);
+                        break;
+                    case TYPE::UNSIGNED_CHAR:
+                        this->data[i][j][k].first = (float)this->handle_endian<unsigned char>(index, temp);
+                        break;
+                    case TYPE::CHAR:
+                        this->data[i][j][k].first = (float)this->handle_endian<char>(index, temp);
+                        break;
+                    case TYPE::UNSIGNED_SHORT:
+                        this->data[i][j][k].first = (float)this->handle_endian<unsigned short>(index, temp);
+                        break;
+                    case TYPE::SHORT:
+                        this->data[i][j][k].first = (float)this->handle_endian<short>(index, temp);
+                        break;
+                    case TYPE::UNSIGNED_INT:
+                        this->data[i][j][k].first = (float)this->handle_endian<unsigned int>(index, temp);
+                        break;
+                    case TYPE::INT:
+                        this->data[i][j][k].first = (float)this->handle_endian<int>(index, temp);
+                        break;
+                    default:
+                        break;
                 }
 
                 if (flag == false) {

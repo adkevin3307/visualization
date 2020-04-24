@@ -21,39 +21,39 @@ Transformation::~Transformation()
 void Transformation::init(TRANSFORMATION type)
 {
     switch (type) {
-    case TRANSFORMATION::MODEL:
-        this->_model = glm::mat4(1.0);
-        break;
-    case TRANSFORMATION::VIEW:
-        this->_view = glm::mat4(1.0);
-        break;
-    case TRANSFORMATION::PROJECTION:
-        this->_projection = glm::mat4(1.0);
-        break;
-    case TRANSFORMATION::MODEL_VIEW_PROJECTION:
-        this->_model = glm::mat4(1.0);
-        this->_view = glm::mat4(1.0);
-        this->_projection = glm::mat4(1.0);
-        break;
-    default:
-        break;
+        case TRANSFORMATION::MODEL:
+            this->_model = glm::mat4(1.0);
+            break;
+        case TRANSFORMATION::VIEW:
+            this->_view = glm::mat4(1.0);
+            break;
+        case TRANSFORMATION::PROJECTION:
+            this->_projection = glm::mat4(1.0);
+            break;
+        case TRANSFORMATION::MODEL_VIEW_PROJECTION:
+            this->_model = glm::mat4(1.0);
+            this->_view = glm::mat4(1.0);
+            this->_projection = glm::mat4(1.0);
+            break;
+        default:
+            break;
     }
 }
 
 void Transformation::set_model(TRANSFORMATION type, glm::vec3 v, float angle)
 {
     switch (type) {
-    case TRANSFORMATION::TRANSLATE:
-        this->_model = glm::translate(this->_model, v);
-        break;
-    case TRANSFORMATION::SCALE:
-        this->_model = glm::scale(this->_model, v);
-        break;
-    case TRANSFORMATION::ROTATE:
-        this->_model = glm::rotate(this->_model, angle, v);
-        break;
-    default:
-        break;
+        case TRANSFORMATION::TRANSLATE:
+            this->_model = glm::translate(this->_model, v);
+            break;
+        case TRANSFORMATION::SCALE:
+            this->_model = glm::scale(this->_model, v);
+            break;
+        case TRANSFORMATION::ROTATE:
+            this->_model = glm::rotate(this->_model, angle, v);
+            break;
+        default:
+            break;
     }
     this->shader.set_uniform("model", this->_model);
 }

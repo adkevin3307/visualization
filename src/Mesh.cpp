@@ -83,20 +83,20 @@ void Mesh::set_texture(int index, vector<float> &texture_data, glm::ivec3 shape)
     if (this->use_texture == false) return;
 
     switch (this->texture[index].second) {
-    case GL_TEXTURE_1D:
-        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, shape.x, 0, GL_RGBA, GL_FLOAT, texture_data.data());
-        glGenerateMipmap(GL_TEXTURE_1D);
-        break;
-    case GL_TEXTURE_2D:
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, shape.x, shape.y, 0, GL_RGBA, GL_FLOAT, texture_data.data());
-        glGenerateMipmap(GL_TEXTURE_2D);
-        break;
-    case GL_TEXTURE_3D:
-        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, shape.x, shape.y, shape.z, 0, GL_RGBA, GL_FLOAT, texture_data.data());
-        glGenerateMipmap(GL_TEXTURE_3D);
-        break;
-    default:
-        break;
+        case GL_TEXTURE_1D:
+            glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, shape.x, 0, GL_RGBA, GL_FLOAT, texture_data.data());
+            glGenerateMipmap(GL_TEXTURE_1D);
+            break;
+        case GL_TEXTURE_2D:
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, shape.x, shape.y, 0, GL_RGBA, GL_FLOAT, texture_data.data());
+            glGenerateMipmap(GL_TEXTURE_2D);
+            break;
+        case GL_TEXTURE_3D:
+            glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, shape.x, shape.y, shape.z, 0, GL_RGBA, GL_FLOAT, texture_data.data());
+            glGenerateMipmap(GL_TEXTURE_3D);
+            break;
+        default:
+            break;
     }
 
     for (size_t i = 0; i < this->texture.size(); i++) {
