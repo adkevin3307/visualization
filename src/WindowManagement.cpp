@@ -126,7 +126,6 @@ void WindowManagement::load(string filename, METHOD method)
 
             mesh = Mesh((Method*)&iso_surface, METHOD::ISOSURFACE);
             mesh.init();
-
             break;
         }
         case (METHOD::SLICING): {
@@ -180,8 +179,8 @@ void generate_combo(map<string, METHOD> &methods, vector<string> &filenames)
 
 void WindowManagement::set_general()
 {
+    static METHOD current_method = METHOD::ISOSURFACE;
     static bool first_time = true;
-    static bool click_load = false;
 
     static string method = "Iso Surface";
     static map<string, METHOD> methods;
@@ -228,7 +227,7 @@ void WindowManagement::set_general()
 
     ImGui::SameLine();
     if (ImGui::Button("Load")) {
-        click_load = true;
+        current_method = methods[method];
         this->load(filename, methods[method]);
     }
 
@@ -242,14 +241,10 @@ void WindowManagement::set_general()
     if (glm::length(temp) > EPSILON) temp = glm::normalize(temp);
     glm::vec4 clip_plane = glm::vec4(temp, clip_distance);
 
-    if (click_load) {
-        click_load = false;
-
-        this->shader_map[methods[method]].set_uniform("clip_plane", clip_plane);
-        this->shader_map[methods[method]].set_uniform("view_pos", this->camera.position());
-        this->shader_map[methods[method]].set_uniform("light_pos", this->camera.position());
-        this->shader_map[methods[method]].set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
-    }
+    this->shader_map[current_method].set_uniform("clip_plane", clip_plane);
+    this->shader_map[current_method].set_uniform("view_pos", this->camera.position());
+    this->shader_map[current_method].set_uniform("light_pos", this->camera.position());
+    this->shader_map[current_method].set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
 }
 
 void WindowManagement::init()
@@ -319,7 +314,7 @@ void WindowManagement::main_loop()
             transformation.set();
 
             if (this->mesh[i].method() == METHOD::ISOSURFACE) {
-                this->shader_map[this->mesh[i].method()].set_uniform("object_color", glm::vec4(0.41, 0.37, 0.89, 1.0));
+                this->shader_map[METHOD::ISOSURFACE].set_uniform("object_color", glm::vec4(0.41, 0.37, 0.89, 1.0));
             }
             this->mesh[i].draw(GL_FILL);
         }
