@@ -70,10 +70,12 @@ void Mesh::init_texture(GLenum target, int index)
     if (this->use_texture == false) return;
 
     this->texture[index].second = target;
+
+    glActiveTexture(GL_TEXTURE0 + index);
     glBindTexture(target, this->texture[index].first);
 
-    glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
@@ -82,6 +84,7 @@ void Mesh::set_texture(int index, vector<float> &texture_data, glm::ivec3 shape)
 {
     if (this->use_texture == false) return;
 
+    glActiveTexture(GL_TEXTURE0 + index);
     switch (this->texture[index].second) {
         case GL_TEXTURE_1D:
             glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, shape.x, 0, GL_RGBA, GL_FLOAT, texture_data.data());
@@ -99,9 +102,7 @@ void Mesh::set_texture(int index, vector<float> &texture_data, glm::ivec3 shape)
             break;
     }
 
-    for (size_t i = 0; i < this->texture.size(); i++) {
-        glBindTexture(this->texture[i].second, 0);
-    }
+    glBindTexture(this->texture[index].second, 0);
 }
 
 void Mesh::transform(Transformation &transformation)
@@ -114,10 +115,12 @@ void Mesh::draw(GLenum rasterize_mode)
 {
     BufferManagement::bind(this->buffer);
     for (size_t i = 0; this->use_texture && i < this->texture.size(); i++) {
+        glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture(this->texture[i].second, this->texture[i].first);
     }
     BufferManagement::draw(this->buffer, 0, (this->vertex.size() / this->stride), this->render_mode, rasterize_mode);
     for (size_t i = 0; this->use_texture && i < this->texture.size(); i++) {
+        glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture(this->texture[i].second, 0);
     }
     BufferManagement::unbind();

@@ -18,13 +18,14 @@ private:
 
 	void generate_texture_1d();
 	void generate_texture_3d();
-	void push(double x, double y, double z);
+	void push(glm::vec3 data);
 
 public:
 	Slicing(string inf_file, string raw_file);
 	~Slicing();
 
 	void run();
+	void run(double index);
 	vector<float>& texture_1d();
 	vector<float>& texture_3d();
 	glm::ivec3 texture_1d_shape();

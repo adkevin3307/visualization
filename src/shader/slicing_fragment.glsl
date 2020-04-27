@@ -5,8 +5,8 @@ in float slice_check;
 
 out vec4 fragment_color;
 
-uniform sampler1D texture_1d;
-uniform sampler3D texture_3d;
+layout (binding = 0) uniform sampler1D texture_1d;
+layout (binding = 1) uniform sampler3D texture_3d;
 uniform vec3 view_pos;
 uniform vec3 light_pos;
 uniform vec3 light_color;

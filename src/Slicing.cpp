@@ -31,19 +31,29 @@ double gaussian(double mu, double sigma, double value)
 
 void Slicing::generate_texture_1d()
 {
-    this->_texture_1d.resize((abs(super::volume.limit_value().x - super::volume.limit_value().y) + 1) * 4);
+    glm::vec2 limit_value = super::volume.limit_value();
 
-    for (size_t i = 0; i < this->_texture_1d.size(); i += 4) {
-        this->_texture_1d[i] = gaussian(80.0 * 4.0, 10.0, i) * 10.0;
-        this->_texture_1d[i + 1] = gaussian(80.0 * 4.0, 10.0, i) * 10.0;
-        this->_texture_1d[i + 2] = gaussian(80.0 * 4.0, 10.0, i) * 10.0;
-        this->_texture_1d[i + 3] = gaussian(80.0 * 4.0, 200.0, i) * 200.0;
-    }
+    this->_texture_1d.resize((limit_value.y - limit_value.x + 1) * 4, 0.0);
+
+    // for (size_t i = 0; i < this->_texture_1d.size(); i += 4) {
+    //     this->_texture_1d[i + 0] = gaussian((20.0 - limit_value.x) * 4.0, 50.0, i) * 50.0;
+    //     this->_texture_1d[i + 1] = gaussian((80.0 - limit_value.x) * 4.0, 50.0, i) * 50.0;
+    //     this->_texture_1d[i + 2] = gaussian((150.0 - limit_value.x) * 4.0, 50.0, i) * 50.0;
+    //     this->_texture_1d[i + 3] = gaussian((80.0 - limit_value.x) * 4.0, 5.0, i) * 5.0;
+    // }
+    this->_texture_1d[(80 - limit_value.x) * 4 + 0] = 0.41;
+
+    this->_texture_1d[(80 - limit_value.x) * 4 + 1] = 0.37;
+
+    this->_texture_1d[(80 - limit_value.x) * 4 + 2] = 0.89;
+
+    this->_texture_1d[(80 - limit_value.x) * 4 + 3] = 1.0;
 }
 
 void Slicing::generate_texture_3d()
 {
     glm::ivec3 shape = super::volume.shape();
+    glm::vec2 limit_value = super::volume.limit_value();
 
     this->_texture_3d.resize(shape.x * shape.y * shape.z * 4);
 
@@ -53,9 +63,7 @@ void Slicing::generate_texture_3d()
                 int index = (i * shape.y * shape.z + j * shape.z + k) * 4;
 
                 glm::vec3 normal = super::volume(i, j, k).second;
-                if (glm::length(normal) > EPSILON) normal = glm::normalize(normal);
-
-                float value = super::volume(i, j, k).first / super::volume.limit_value().y;
+                float value = (super::volume(i, j, k).first - limit_value.x) / limit_value.y;
 
                 glm::vec4 voxel = glm::vec4(normal, value);
                 for (auto delta = 0; delta < 4; delta++) {
@@ -66,39 +74,60 @@ void Slicing::generate_texture_3d()
     }
 }
 
-void Slicing::push(double x, double y, double z)
+void Slicing::push(glm::vec3 data)
 {
-    this->_vertex.push_back(x);
-    this->_vertex.push_back(y);
-    this->_vertex.push_back(z);
+    for (auto i = 0; i < 3; i++) {
+        this->_vertex.push_back(data[i]);
+    }
 }
 
 void Slicing::run()
 {
-    // axis
     glm::ivec3 shape = super::volume.shape();
-    for (float i = 0; i < shape.z; i += 0.1) {
-        double temp = i / shape.z;
-        // triangle
-        this->push(0.0, 0.0, (double)i);
-        this->push(0.0, 0.0, temp);
+    for (double index = 0; index < shape.z; index += 0.1) {
+        this->push(glm::vec3(0.0, 0.0, index));
+        this->push(glm::vec3(0.0, 0.0, index / shape.z));
 
-        this->push((double)shape.x, 0.0, (double)i);
-        this->push(1.0, 0.0, temp);
+        this->push(glm::vec3(shape.x, 0.0, index));
+        this->push(glm::vec3(1.0, 0.0, index / shape.z));
 
-        this->push((double)shape.x, (double)shape.y, (double)i);
-        this->push(1.0, 1.0, temp);
+        this->push(glm::vec3(shape.x, shape.y, index));
+        this->push(glm::vec3(1.0, 1.0, index / shape.z));
 
-        // triangle
-        this->push(0.0, 0.0, (double)i);
-        this->push(0.0, 0.0, temp);
+        this->push(glm::vec3(0.0, 0.0, index));
+        this->push(glm::vec3(0.0, 0.0, index / shape.z));
 
-        this->push((double)shape.x, (double)shape.y, (double)i);
-        this->push(1.0, 1.0, temp);
+        this->push(glm::vec3(shape.x, shape.y, index));
+        this->push(glm::vec3(1.0, 1.0, index / shape.z));
 
-        this->push(0.0, (double)shape.y, (double)i);
-        this->push(0.0, 1.0, temp);
+        this->push(glm::vec3(0.0, shape.y, index));
+        this->push(glm::vec3(0.0, 1.0, index / shape.z));
     }
+}
+
+void Slicing::run(double index)
+{
+    this->_vertex.clear();
+    this->_vertex.shrink_to_fit();
+
+    glm::ivec3 shape = super::volume.shape();
+    this->push(glm::vec3(0.0, 0.0, index));
+    this->push(glm::vec3(0.0, 0.0, index / shape.z));
+
+    this->push(glm::vec3(shape.x, 0.0, index));
+    this->push(glm::vec3(1.0, 0.0, index / shape.z));
+
+    this->push(glm::vec3(shape.x, shape.y, index));
+    this->push(glm::vec3(1.0, 1.0, index / shape.z));
+
+    this->push(glm::vec3(0.0, 0.0, index));
+    this->push(glm::vec3(0.0, 0.0, index / shape.z));
+
+    this->push(glm::vec3(shape.x, shape.y, index));
+    this->push(glm::vec3(1.0, 1.0, index / shape.z));
+
+    this->push(glm::vec3(0.0, shape.y, index));
+    this->push(glm::vec3(0.0, 1.0, index / shape.z));
 }
 
 vector<float>& Slicing::texture_1d()
@@ -113,7 +142,7 @@ vector<float>& Slicing::texture_3d()
 
 glm::ivec3 Slicing::texture_1d_shape()
 {
-    return glm::ivec3(this->_texture_1d.size(), 0, 0);
+    return glm::ivec3(this->_texture_1d.size() / 4, 0, 0);
 }
 
 glm::ivec3 Slicing::texture_3d_shape()

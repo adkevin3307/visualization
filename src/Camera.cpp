@@ -6,7 +6,7 @@ Camera::Camera()
 {
     this->_radius = 300.0f;
     this->_fov = 45.0;
-    this->_yaw = 90.0;
+    this->_yaw = -90.0;
     this->_pitch = 0.0;
     this->_sensitivity = 0.1;
 
@@ -56,7 +56,7 @@ void Camera::process_mouse(BUTTON button, double xoffset, double yoffset)
 
 void Camera::reset()
 {
-    this->_yaw = 90.0;
+    this->_yaw = -90.0;
     this->_pitch = 0.0;
 
     this->_center = glm::vec3(0.0, 0.0, 0.0);
