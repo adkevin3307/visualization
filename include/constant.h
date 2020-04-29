@@ -31,6 +31,7 @@ enum TRANSFORMATION {
 };
 
 enum METHOD {
+	NONE,
 	ISOSURFACE,
 	SLICING
 };

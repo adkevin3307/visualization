@@ -206,7 +206,7 @@ void generate_combo(map<string, METHOD> &methods, vector<string> &filenames)
 
 void WindowManagement::set_general()
 {
-    static METHOD current_method;
+    static METHOD current_method = METHOD::NONE;
     static bool first_time = true;
 
     static string method = "Iso Surface";
@@ -250,7 +250,10 @@ void WindowManagement::set_general()
     }
 
     ImGui::SameLine();
-    if (ImGui::Button("Clean")) this->mesh.clear();
+    if (ImGui::Button("Clean")) {
+        current_method = METHOD::NONE;
+        this->mesh.clear();
+    }
 
     ImGui::SameLine();
     if (ImGui::Button("Load")) {
@@ -268,7 +271,7 @@ void WindowManagement::set_general()
     if (glm::length(temp) > EPSILON) temp = glm::normalize(temp);
     glm::vec4 clip_plane = glm::vec4(temp, clip_distance);
 
-    if (this->shader_map.find(current_method) != this->shader_map.end()) {
+    if (current_method != METHOD::NONE) {
         this->shader_map[current_method].set_uniform("clip_plane", clip_plane);
         this->shader_map[current_method].set_uniform("view_pos", this->camera.position());
         this->shader_map[current_method].set_uniform("light_pos", this->camera.position());
