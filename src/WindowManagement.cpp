@@ -111,7 +111,6 @@ void WindowManagement::set_callback()
 
 void WindowManagement::load(string filename, METHOD method)
 {
-    Mesh temp_mesh;
     string inf_file = "./Data/Scalar/" + filename + ".inf", raw_file = "./Data/Scalar/" + filename + ".raw";
 
     this->shader_map[method].use();
@@ -124,7 +123,7 @@ void WindowManagement::load(string filename, METHOD method)
                 IsoSurface iso_surface(inf_file, raw_file);
                 iso_surface.run();
 
-                temp_mesh = Mesh((Method*)&iso_surface, METHOD::ISOSURFACE);
+                Mesh temp_mesh = Mesh(iso_surface, METHOD::ISOSURFACE);
                 temp_mesh.init();
 
                 this->mesh.push_back(temp_mesh);
@@ -134,7 +133,7 @@ void WindowManagement::load(string filename, METHOD method)
                 Slicing slicing(inf_file, raw_file);
                 slicing.run();
 
-                temp_mesh = Mesh((Method*)&slicing, METHOD::SLICING);
+                Mesh temp_mesh = Mesh(slicing, METHOD::SLICING);
                 temp_mesh.enable_texture(2);
                 temp_mesh.init();
                 temp_mesh.init_texture(GL_TEXTURE_1D, 0);
@@ -158,7 +157,7 @@ void WindowManagement::load(string filename, METHOD method)
             //     for (double index = 0.0; index < shape_3d.z; index += 0.5) {
             //         slicing.run(index);
                     
-            //         Mesh temp = Mesh((Method*)&slicing, METHOD::SLICING);
+            //         Mesh temp = Mesh(slicing, METHOD::SLICING);
             //         temp.enable_texture(2);
             //         temp.init();
             //         temp.init_texture(GL_TEXTURE_1D, 0);

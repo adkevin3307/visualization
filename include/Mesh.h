@@ -27,7 +27,7 @@ private:
 
 public:
     Mesh();
-    Mesh(Method *render_method, METHOD method);
+    Mesh(Method &render_method, METHOD method);
     ~Mesh();
 
     METHOD method();

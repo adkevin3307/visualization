@@ -16,12 +16,12 @@ Mesh::Mesh()
     this->vertex.shrink_to_fit();
 }
 
-Mesh::Mesh(Method *render_method, METHOD method) : Mesh::Mesh()
+Mesh::Mesh(Method &render_method, METHOD method) : Mesh::Mesh()
 {
-    this->vertex = render_method->vertex();
-    this->attribute = render_method->attribute();
-    this->render_mode = render_method->render_mode();
-    this->shape = render_method->volume_shape();
+    this->vertex = render_method.vertex();
+    this->attribute = render_method.attribute();
+    this->render_mode = render_method.render_mode();
+    this->shape = render_method.volume_shape();
 
     this->_method = method;
 
