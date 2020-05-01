@@ -20,6 +20,10 @@ LIBS = -L./lib
 mkdir =
 rm =
 
+ifeq ($(findstring static, $(MAKECMDGOALS)), static)
+	CXXFLAGS += -static
+endif
+
 ifeq ($(findstring histogram, $(MAKECMDGOALS)), histogram)
 	CXXFLAGS += -DHISTOGRAM
 endif
@@ -59,7 +63,7 @@ $(OBJ_DIR)/%.o: src/imgui/%.cpp
 $(OBJ_DIR)/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-all histogram test: create_directory $(EXE) execute
+all static histogram test: create_directory $(EXE) execute
 	@echo Compile and Execute Success
 
 create_directory:
