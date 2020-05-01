@@ -4,6 +4,7 @@
 
 #include "constant.h"
 
+#include <iostream>
 #include <cmath>
 
 using namespace std;
@@ -31,23 +32,17 @@ double gaussian(double mu, double sigma, double value)
 
 void Slicing::generate_texture_1d()
 {
+    double render_value = super::volume.average();
     glm::vec2 limit_value = super::volume.limit_value();
 
     this->_texture_1d.resize((limit_value.y - limit_value.x + 1) * 4, 0.0);
 
-    // for (size_t i = 0; i < this->_texture_1d.size(); i += 4) {
-    //     this->_texture_1d[i + 0] = gaussian((20.0 - limit_value.x) * 4.0, 50.0, i) * 50.0;
-    //     this->_texture_1d[i + 1] = gaussian((80.0 - limit_value.x) * 4.0, 50.0, i) * 50.0;
-    //     this->_texture_1d[i + 2] = gaussian((150.0 - limit_value.x) * 4.0, 50.0, i) * 50.0;
-    //     this->_texture_1d[i + 3] = gaussian((80.0 - limit_value.x) * 4.0, 5.0, i) * 5.0;
-    // }
-
-    int render_value = (int)super::volume.average();
-
-    this->_texture_1d[(render_value - limit_value.x) * 4 + 0] = 0.41;
-    this->_texture_1d[(render_value - limit_value.x) * 4 + 1] = 0.37;
-    this->_texture_1d[(render_value - limit_value.x) * 4 + 2] = 0.89;
-    this->_texture_1d[(render_value - limit_value.x) * 4 + 3] = 0.5;
+    for (size_t i = 0; i < this->_texture_1d.size(); i += 4) {
+        this->_texture_1d[i + 0] = gaussian((render_value - limit_value.x) * 4.0, 5.0, i) * 5.0;
+        this->_texture_1d[i + 1] = gaussian((render_value - limit_value.x) * 4.0, 5.0, i) * 5.0;
+        this->_texture_1d[i + 2] = gaussian((render_value - limit_value.x) * 4.0, 5.0, i) * 5.0;
+        this->_texture_1d[i + 3] = gaussian((render_value - limit_value.x) * 4.0, 5.0, i) * 5.0;
+    }
 }
 
 void Slicing::generate_texture_3d()
@@ -86,7 +81,7 @@ void Slicing::run()
     glm::ivec3 shape = super::volume.shape();
     glm::vec3 plane_position = glm::vec3(shape) * super::volume.voxel_size();
 
-    for (double index = 0; index < shape.z; index += 0.1) {
+    for (double index = 0; index < shape.z; index += 0.5) {
         this->push(glm::vec3(0.0, 0.0, index));
         this->push(glm::vec3(0.0, 0.0, index / shape.z));
 
@@ -105,33 +100,6 @@ void Slicing::run()
         this->push(glm::vec3(0.0, plane_position.y, index));
         this->push(glm::vec3(0.0, 1.0, index / shape.z));
     }
-}
-
-void Slicing::run(double index)
-{
-    this->_vertex.clear();
-    this->_vertex.shrink_to_fit();
-
-    glm::ivec3 shape = super::volume.shape();
-    glm::vec3 plane_position = glm::vec3(shape) * super::volume.voxel_size();
-
-    this->push(glm::vec3(0.0, 0.0, index));
-    this->push(glm::vec3(0.0, 0.0, index / shape.z));
-
-    this->push(glm::vec3(plane_position.x, 0.0, index));
-    this->push(glm::vec3(1.0, 0.0, index / shape.z));
-
-    this->push(glm::vec3(plane_position.x, plane_position.y, index));
-    this->push(glm::vec3(1.0, 1.0, index / shape.z));
-
-    this->push(glm::vec3(0.0, 0.0, index));
-    this->push(glm::vec3(0.0, 0.0, index / shape.z));
-
-    this->push(glm::vec3(plane_position.x, plane_position.y, index));
-    this->push(glm::vec3(1.0, 1.0, index / shape.z));
-
-    this->push(glm::vec3(0.0, plane_position.y, index));
-    this->push(glm::vec3(0.0, 1.0, index / shape.z));
 }
 
 vector<float>& Slicing::texture_1d()

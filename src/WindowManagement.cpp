@@ -1,7 +1,5 @@
 #include "WindowManagement.h"
 
-#include "constant.h"
-
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -137,39 +135,13 @@ void WindowManagement::load(string filename, METHOD method)
                 temp_mesh.enable_texture(2);
                 temp_mesh.init();
                 temp_mesh.init_texture(GL_TEXTURE_1D, 0);
-                temp_mesh.set_texture(0, slicing.texture_1d(), slicing.texture_1d_shape());
                 temp_mesh.init_texture(GL_TEXTURE_3D, 1);
+                temp_mesh.set_texture(0, slicing.texture_1d(), slicing.texture_1d_shape());
                 temp_mesh.set_texture(1, slicing.texture_3d(), slicing.texture_3d_shape());
 
                 this->mesh.push_back(temp_mesh);
                 break;
             }
-            // case (METHOD::SLICING): {
-            //     Slicing slicing(inf_file, raw_file);
-            //     vector<float> texture_1d, texture_3d;
-
-            //     texture_1d = slicing.texture_1d();
-            //     texture_3d = slicing.texture_3d();
-
-            //     glm::ivec3 shape_1d = slicing.texture_1d_shape();
-            //     glm::ivec3 shape_3d = slicing.texture_3d_shape();
-
-            //     for (double index = 0.0; index < shape_3d.z; index += 0.5) {
-            //         slicing.run(index);
-                    
-            //         Mesh temp = Mesh(slicing, METHOD::SLICING);
-            //         temp.enable_texture(2);
-            //         temp.init();
-            //         temp.init_texture(GL_TEXTURE_1D, 0);
-            //         temp.set_texture(0, texture_1d, shape_1d);
-            //         temp.init_texture(GL_TEXTURE_3D, 1);
-            //         temp.set_texture(1, texture_3d, shape_3d);
-
-            //         this->mesh.push_back(temp);
-            //     }
-
-            //     break;
-            // }
             default:
                 break;
         }

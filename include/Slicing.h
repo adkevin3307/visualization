@@ -25,7 +25,6 @@ public:
 	~Slicing();
 
 	void run();
-	void run(double index);
 	vector<float>& texture_1d();
 	vector<float>& texture_3d();
 	glm::ivec3 texture_1d_shape();
