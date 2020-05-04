@@ -1,5 +1,6 @@
-# Iso Surface
-讀入 Volume 後，藉由 iso value 產生 iso surface，iso surface 以大量三角形模擬，其中運用 linear interpolation 求得三角形頂點座標及法向量。
+# Visualization Method
+* Iso Surface
+* Slicing Method
 
 ## Environment
 * Windows
@@ -18,16 +19,22 @@
 
 ### Compile and Execute
 * `make`
-    * Compile all file
-    * Generate and Execute`main.exe`
-* `make compile`
-    * Compile all file
-    * Generate `main.exe`
-* `make execute`
-    * Execute `main.exe`
+    * Compile all file (exclude test.cpp)
+    * Generate and Execute `main.exe`
+* `make static`
+    * Compile all file with `g++` static mode (exclude test.cpp)
+    * Generate and Execute `main.exe`
+* `make histogram`
+    * Compile all file with `HISTOGRAM` define (exclude test.cpp)
+    * Generate and Execute `main.exe`
+* `make test`
+    * Compile all file (exclude main.cpp)
+    * Generate and Execute `main.exe`
 * `make clean`
-    * Remove all `.exe`
+    * Remove all `.exe`, `out`
+    * Remove `imgui.ini`
     * Remove `./Data/Scalar/histogram.txt`
+    * Remove `obj` directory
 
 > If you want to show histogram, you'll need to run
 > * `make histogram execute`
@@ -41,7 +48,10 @@
 * Click and Drag mouse left button: Move camera position
     * Spherical Coordinate System
 * Click and Drag mouse right button: Move camera look at position
-* GUI: Control clip plane
+* GUI
+    * Select visualization method
+    * Select data
+    * Control Clip Plane
 
 ## Class Structure
 
@@ -57,8 +67,14 @@
 #### `IsoSurface`
 * inheritance `Method`
 * implement virtual function
-* calculate iso surface after volume read data
+* calculate iso surface after `Volume` read data
 * generate triangles' vertices and normals
+
+#### `Slicing`
+* inheritance `Method`
+* implement virtual function
+* calculate slicing after `Volume` read data
+* generate triangles' and textures' coordinates for render
 
 #### `Mesh`
 * setting VBO and VAO with triangles vertices and normals
