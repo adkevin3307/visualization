@@ -19,9 +19,30 @@ Slicing::Slicing(string inf_file, string raw_file) : super::Method(inf_file, raw
     super::volume.show();
 
     this->_template = {
-        {-1, 0, 0, -1, 1, 0, -1, 1, 1, -1, 0, 1},
-        {0, -1, 0, 1, -1, 0, 1, -1, 1, 0, -1, 1},
-        {0, 0, -1, 1, 0, -1, 1, 1, -1, 0, 1, -1}
+        {
+            -1, 0, 0,
+            -1, 1, 0,
+            -1, 1, 1,
+            -1, 0, 0,
+            -1, 1, 1,
+            -1, 0, 1
+        },
+        {
+            0, -1, 0,
+            1, -1, 0,
+            1, -1, 1,
+            0, -1, 0,
+            1, -1, 1,
+            0, -1, 1
+        },
+        {
+            0, 0, -1,
+            1, 0, -1,
+            1, 1, -1,
+            0, 0, -1,
+            1, 1, -1,
+            0, 1, -1
+        }
     };
 
     this->generate_texture_1d();
@@ -105,7 +126,7 @@ void Slicing::calculate(double index, int max_index, glm::ivec3 shape)
 {
     glm::vec3 plane_position = super::volume_shape();
 
-    for (auto i = 0; i < 12; i += 3) {
+    for (auto i = 0; i < 18; i += 3) {
         glm::vec3 basic = glm::vec3(
             this->_template[max_index][i + 0],
             this->_template[max_index][i + 1],

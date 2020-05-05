@@ -323,7 +323,7 @@ void WindowManagement::main_loop()
         this->set_general();
 
         for (size_t i = 0; i < this->mesh.size(); i++) {
-            Transformation transformation(this->shader_map[mesh[i].method()]);
+            Transformation transformation(this->shader_map[this->mesh[i].method()]);
             transformation.set_projection(WIDTH, HEIGHT, this->rate, 0.0, 500.0);
             transformation.set_view(this->camera.view_matrix());
 

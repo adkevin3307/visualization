@@ -54,7 +54,7 @@ void Mesh::init()
 {
     this->buffer = BufferManagement::generate();
     BufferManagement::bind(this->buffer);
-    BufferManagement::fill(vertex);
+    BufferManagement::fill(this->vertex);
 
     int sum = 0;
     for (size_t i = 0; i < this->attribute.size(); i++) {
