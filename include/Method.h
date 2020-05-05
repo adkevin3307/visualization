@@ -14,6 +14,7 @@ protected:
     Volume volume;
 
 public:
+    Method();
     Method(string inf_file, string raw_file);
     virtual ~Method();
 

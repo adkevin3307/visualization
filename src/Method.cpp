@@ -2,6 +2,11 @@
 
 using namespace std;
 
+Method::Method()
+{
+
+}
+
 Method::Method(string inf_file, string raw_file)
 {
     this->volume = Volume(inf_file, raw_file);

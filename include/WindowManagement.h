@@ -30,7 +30,7 @@ private:
 
     void set_callback();
 
-    void load(string filename, METHOD method);
+    void load(string filename, METHOD method, bool first);
     void set_general();
 
 public:

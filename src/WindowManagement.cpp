@@ -107,13 +107,13 @@ void WindowManagement::set_callback()
     glfwSetScrollCallback(this->window, scrollCallback);
 }
 
-void WindowManagement::load(string filename, METHOD method)
+void WindowManagement::load(string filename, METHOD method, bool first)
 {
     string inf_file = "./Data/Scalar/" + filename + ".inf", raw_file = "./Data/Scalar/" + filename + ".raw";
 
     this->shader_map[method].use();
 
-    cout << "==================== Info ====================" << '\n';
+    if (first) cout << "==================== Info ====================" << '\n';
 
     try {
         switch (method) {
@@ -121,25 +121,37 @@ void WindowManagement::load(string filename, METHOD method)
                 IsoSurface iso_surface(inf_file, raw_file);
                 iso_surface.run();
 
-                Mesh temp_mesh = Mesh(iso_surface, METHOD::ISOSURFACE);
+                Mesh temp_mesh(iso_surface, METHOD::ISOSURFACE);
                 temp_mesh.init();
 
                 this->mesh.push_back(temp_mesh);
                 break;
             }
             case (METHOD::SLICING): {
-                Slicing slicing(inf_file, raw_file);
-                slicing.run();
+                static Slicing slicing;
+                static vector<GLfloat> texture_1d, texture_3d;
+                static glm::ivec3 texture_1d_shape, texture_3d_shape;
 
-                Mesh temp_mesh = Mesh(slicing, METHOD::SLICING);
+                if (first) {
+                    slicing = Slicing(inf_file, raw_file);
+                    texture_1d = slicing.texture_1d();
+                    texture_3d = slicing.texture_3d();
+                    texture_1d_shape = slicing.texture_1d_shape();
+                    texture_3d_shape = slicing.texture_3d_shape();
+                }
+                slicing.run(this->camera.position());
+
+                Mesh temp_mesh(slicing, METHOD::SLICING);
                 temp_mesh.enable_texture(2);
                 temp_mesh.init();
                 temp_mesh.init_texture(GL_TEXTURE_1D, 0);
                 temp_mesh.init_texture(GL_TEXTURE_3D, 1);
-                temp_mesh.set_texture(0, slicing.texture_1d(), slicing.texture_1d_shape());
-                temp_mesh.set_texture(1, slicing.texture_3d(), slicing.texture_3d_shape());
+                temp_mesh.set_texture(0, texture_1d, texture_1d_shape);
+                temp_mesh.set_texture(1, texture_3d, texture_3d_shape);
 
-                this->mesh.push_back(temp_mesh);
+                if (first) this->mesh.push_back(temp_mesh);
+                else this->mesh.back() = temp_mesh;
+
                 break;
             }
             default:
@@ -150,7 +162,7 @@ void WindowManagement::load(string filename, METHOD method)
         cerr << error.what() << '\n';
     }
 
-    cout << "==============================================" << '\n';
+    if (first) cout << "==============================================" << '\n';
 }
 
 void generate_combo(map<string, METHOD> &methods, vector<string> &filenames)
@@ -229,7 +241,7 @@ void WindowManagement::set_general()
     ImGui::SameLine();
     if (ImGui::Button("Load")) {
         current_method = methods[method];
-        this->load(filename, methods[method]);
+        this->load(filename, methods[method], true);
     }
 
     ImGui::SetWindowFontScale(1.0);
@@ -248,6 +260,7 @@ void WindowManagement::set_general()
         this->shader_map[current_method].set_uniform("light_pos", this->camera.position());
         this->shader_map[current_method].set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
     }
+    if (current_method == METHOD::SLICING) this->load(filename, METHOD::SLICING, false);
 }
 
 void WindowManagement::init()
@@ -298,7 +311,8 @@ void WindowManagement::init()
 void WindowManagement::main_loop()
 {
     while (!glfwWindowShouldClose(this->window)) {
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.2, 0.2, 0.2, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // start imgui frame
