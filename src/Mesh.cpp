@@ -26,7 +26,19 @@ Mesh::Mesh(Method &render_method, METHOD method) : Mesh::Mesh()
     this->_method = method;
 
     this->stride = accumulate(this->attribute.begin(), this->attribute.end(), 0);
+    if (this->stride == 0) this->stride = 1;
+}
 
+Mesh::Mesh(vector<GLfloat> &vertex, vector<int> attribute, GLenum render_mode, glm::vec3 shape, METHOD method) : Mesh::Mesh()
+{
+    this->vertex = vertex;
+    this->attribute = attribute;
+    this->render_mode = render_mode;
+    this->shape = shape;
+
+    this->_method = method;
+
+    this->stride = accumulate(this->attribute.begin(), this->attribute.end(), 0);
     if (this->stride == 0) this->stride = 1;
 }
 
