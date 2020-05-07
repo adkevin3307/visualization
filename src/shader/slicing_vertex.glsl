@@ -12,7 +12,7 @@ uniform mat4 projection_view_model;
 
 void main()
 {
-    fragment_pos = pos;
+    fragment_pos = vec3(model * vec4(pos, 1.0));
     fragment_texture_pos = texture_pos;
 
     slice_check = dot(vec4(fragment_pos, 1.0), clip_plane);
