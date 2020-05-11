@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 using namespace std;
 
@@ -37,14 +38,41 @@ Shader::Shader(string vertex_path, string fragment_path)
     glShaderSource(vertex, 1, &vertex_code_temp, NULL);
     glCompileShader(vertex);
 
+    GLint compile_vertex_success;
+    GLchar compile_vertex_log[1024];
+    glGetShaderiv(vertex, GL_COMPILE_STATUS, &compile_vertex_success);
+    if (compile_vertex_success) cout << vertex_path << ": " << "SHADER::VERTEX::COMPILATION_SUCCESS" << '\n';
+    else {
+        glGetShaderInfoLog(vertex, 1024, NULL, compile_vertex_log);
+        cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED: " << compile_vertex_log << '\n';
+    }
+
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &fragment_code_temp, NULL);
     glCompileShader(fragment);
+
+    GLint compile_fragment_success;
+    GLchar compile_fragment_log[1024];
+    glGetShaderiv(fragment, GL_COMPILE_STATUS, &compile_fragment_success);
+    if (compile_fragment_success) cout << fragment_path << ": " << "SHADER::FRAGMENT::COMPILATION_SUCCESS" << '\n';
+    else {
+        glGetShaderInfoLog(fragment, 1024, NULL, compile_fragment_log);
+        cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED: " << compile_fragment_log << '\n';
+    }
 
     this->ID = glCreateProgram();
     glAttachShader(this->ID, vertex);
     glAttachShader(this->ID, fragment);
     glLinkProgram(ID);
+
+    GLint link_success;
+    GLchar link_log[1024];
+    glGetProgramiv(ID, GL_LINK_STATUS, &link_success);
+    if (link_success) cout << "SHADER::PROGRAM::LINKING_SUCCESS" << '\n';
+    else {
+        glGetProgramInfoLog(ID, 1024, NULL, link_log);
+        cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED: " << link_log << '\n';
+    }
 
     glDeleteShader(vertex);
     glDeleteShader(fragment);

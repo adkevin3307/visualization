@@ -22,12 +22,84 @@ using namespace std;
 WindowManagement::WindowManagement()
     : last_xpos(0.0), last_ypos(0.0), rate(7.0)
 {
-
 }
 
 WindowManagement::~WindowManagement()
 {
+}
 
+void APIENTRY debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
+{
+    // ignore non-significant error / warning codes
+    if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
+
+    cout << "Debug message (" << id << "): " << message << '\n';
+
+    switch (source) {
+        case GL_DEBUG_SOURCE_API:
+            cout << "Source: API" << '\n';
+            break;
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+            cout << "Source: Window System" << '\n';
+            break;
+        case GL_DEBUG_SOURCE_SHADER_COMPILER:
+            cout << "Source: Shader Compiler" << '\n';
+            break;
+        case GL_DEBUG_SOURCE_THIRD_PARTY:
+            cout << "Source: Third Party" << '\n';
+            break;
+        case GL_DEBUG_SOURCE_APPLICATION:
+            cout << "Source: Application" << '\n';
+            break;
+        case GL_DEBUG_SOURCE_OTHER:
+            cout << "Source: Other" << '\n';
+            break;
+    }
+
+    switch (type) {
+        case GL_DEBUG_TYPE_ERROR:
+            cout << "Type: Error" << '\n';
+            break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+            cout << "Type: Deprecated Behaviour" << '\n';
+            break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+            cout << "Type: Undefined Behaviour" << '\n';
+            break;
+        case GL_DEBUG_TYPE_PORTABILITY:
+            cout << "Type: Portability" << '\n';
+            break;
+        case GL_DEBUG_TYPE_PERFORMANCE:
+            cout << "Type: Performance" << '\n';
+            break;
+        case GL_DEBUG_TYPE_MARKER:
+            cout << "Type: Marker" << '\n';
+            break;
+        case GL_DEBUG_TYPE_PUSH_GROUP:
+            cout << "Type: Push Group" << '\n';
+            break;
+        case GL_DEBUG_TYPE_POP_GROUP:
+            cout << "Type: Pop Group" << '\b';
+            break;
+        case GL_DEBUG_TYPE_OTHER:
+            cout << "Type: Other" << '\n';
+            break;
+    }
+
+    switch (severity) {
+        case GL_DEBUG_SEVERITY_HIGH:
+            cout << "Severity: high" << '\n';
+            break;
+        case GL_DEBUG_SEVERITY_MEDIUM:
+            cout << "Severity: medium" << '\n';
+            break;
+        case GL_DEBUG_SEVERITY_LOW:
+            cout << "Severity: low" << '\n';
+            break;
+        case GL_DEBUG_SEVERITY_NOTIFICATION:
+            cout << "Severity: notification" << '\n';
+            break;
+    }
 }
 
 void WindowManagement::error_callback(int error, const char *description)
@@ -86,19 +158,19 @@ void WindowManagement::set_callback()
     glfwSetWindowUserPointer(this->window, this);
 
     auto framebufferSizeCallback = [](GLFWwindow *window, int width, int height) {
-        static_cast<WindowManagement*>(glfwGetWindowUserPointer(window))->framebuffer_size_callback(window, width, height);
+        static_cast<WindowManagement *>(glfwGetWindowUserPointer(window))->framebuffer_size_callback(window, width, height);
     };
 
     auto keyCallback = [](GLFWwindow *window, int key, int scancode, int action, int mods) {
-        static_cast<WindowManagement*>(glfwGetWindowUserPointer(window))->key_callback(window, key, scancode, action, mods);
+        static_cast<WindowManagement *>(glfwGetWindowUserPointer(window))->key_callback(window, key, scancode, action, mods);
     };
 
     auto mouseCallback = [](GLFWwindow *window, double xpos, double ypos) {
-        static_cast<WindowManagement*>(glfwGetWindowUserPointer(window))->mouse_callback(window, xpos, ypos);
+        static_cast<WindowManagement *>(glfwGetWindowUserPointer(window))->mouse_callback(window, xpos, ypos);
     };
 
     auto scrollCallback = [](GLFWwindow *window, double xoffset, double yoffset) {
-        static_cast<WindowManagement*>(glfwGetWindowUserPointer(window))->scroll_callback(window, xoffset, yoffset);
+        static_cast<WindowManagement *>(glfwGetWindowUserPointer(window))->scroll_callback(window, xoffset, yoffset);
     };
 
     glfwSetFramebufferSizeCallback(this->window, framebufferSizeCallback);
@@ -149,8 +221,10 @@ void WindowManagement::load(string filename, METHOD method, bool first)
                 temp_mesh.set_texture(0, texture_1d, texture_1d_shape);
                 temp_mesh.set_texture(1, texture_3d, texture_3d_shape);
 
-                if (first) this->mesh.push_back(temp_mesh);
-                else this->mesh.back() = temp_mesh;
+                if (first)
+                    this->mesh.push_back(temp_mesh);
+                else
+                    this->mesh.back() = temp_mesh;
 
                 break;
             }
@@ -198,7 +272,7 @@ void WindowManagement::set_general()
     static string filename = "engine";
     static vector<string> filenames;
 
-    static float clip_normal[] = {0.0, 0.0, 0.0}, clip_distance = 1.0;
+    static float clip_normal[] = { 0.0, 0.0, 0.0 }, clip_distance = 1.0;
 
     if (first_time) generate_combo(methods, filenames);
     first_time = false;
@@ -271,6 +345,7 @@ void WindowManagement::init()
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
     this->window = glfwCreateWindow(WIDTH, HEIGHT, "window", NULL, NULL);
 
@@ -293,9 +368,14 @@ void WindowManagement::init()
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
 
-    // Setup Platform/Renderer bindings
+    // Setup Platform / Renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(this->window, true);
     ImGui_ImplOpenGL3_Init("#version 440");
+
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageCallback(debug_callback, nullptr);
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -304,8 +384,12 @@ void WindowManagement::init()
 
     this->set_callback();
 
-    this->shader_map[METHOD::ISOSURFACE] = Shader("./src/shader/vertex.glsl", "./src/shader/fragment.glsl");
-    this->shader_map[METHOD::SLICING] = Shader("./src/shader/slicing_vertex.glsl", "./src/shader/slicing_fragment.glsl");
+    this->shader_map[METHOD::ISOSURFACE] = Shader(
+        "./src/shader/iso_surface/vertex.glsl",
+        "./src/shader/iso_surface/fragment.glsl");
+    this->shader_map[METHOD::SLICING] = Shader(
+        "./src/shader/slicing/vertex.glsl",
+        "./src/shader/slicing/fragment.glsl");
 }
 
 void WindowManagement::main_loop()

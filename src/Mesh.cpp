@@ -86,8 +86,17 @@ void Mesh::init_texture(GLenum target, int index)
     glActiveTexture(GL_TEXTURE0 + index);
     glBindTexture(target, this->texture[index].first);
 
-    glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    switch (target) {
+        case GL_TEXTURE_3D:
+            glTexParameteri(target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        case GL_TEXTURE_2D:
+            glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        case GL_TEXTURE_1D:
+            glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        default:
+            break;
+    }
+
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }

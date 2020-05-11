@@ -73,7 +73,7 @@ void Slicing::generate_texture_1d()
         this->_texture_1d[i + 0] = 0.0;
         this->_texture_1d[i + 1] = 1.0;
         this->_texture_1d[i + 2] = 0.0;
-        this->_texture_1d[i + 3] = 0.0497;
+        this->_texture_1d[i + 3] = 0.1097;
     }
 
     for (auto i = (193 - limit_value.x) * 4; i <= (199 - limit_value.x) * 4; i += 4) {
@@ -101,7 +101,7 @@ void Slicing::generate_texture_3d()
     for (auto i = 0; i < shape.x; i++) {
         for (auto j = 0; j < shape.y; j++) {
             for (auto k = 0; k < shape.z; k++) {
-                int index = (i * shape.y * shape.z + j * shape.z + k) * 4;
+                int index = (k * shape.x * shape.y + j * shape.x + i) * 4;
 
                 glm::vec3 normal = super::volume(i, j, k).second;
                 float value = (super::volume(i, j, k).first - limit_value.x) / limit_value.y;
@@ -126,7 +126,7 @@ void Slicing::calculate(double index, int max_index, glm::ivec3 shape)
 {
     glm::vec3 plane_position = super::volume_shape();
 
-    for (auto i = 0; i < 18; i += 3) {
+    for (size_t i = 0; i < this->_template[max_index].size(); i += 3) {
         glm::vec3 basic = glm::vec3(
             this->_template[max_index][i + 0],
             this->_template[max_index][i + 1],

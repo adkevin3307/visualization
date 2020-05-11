@@ -1,25 +1,20 @@
 #version 440 core
 in vec3 fragment_pos;
-in vec3 fragment_texture_pos;
+in vec3 fragment_normal;
 in float slice_check;
 
 out vec4 fragment_color;
 
-layout (binding = 0) uniform sampler1D texture_1d;
-layout (binding = 1) uniform sampler3D texture_3d;
 uniform vec3 view_pos;
 uniform vec3 light_pos;
 uniform vec3 light_color;
+uniform vec4 object_color;
 
 void main()
 {
     if (slice_check < 0.0) discard;
 
-    float value = texture(texture_3d, fragment_texture_pos).w;
-    vec3 normal = normalize(texture(texture_3d, fragment_texture_pos).xyz);
-
-    vec4 object_color = texture(texture_1d, value);
-
+    vec3 normal = normalize(fragment_normal);
     vec3 view_direction = normalize(fragment_pos - view_pos);
 
     if (dot(normal, view_direction) < 0.0) normal = -normal;
