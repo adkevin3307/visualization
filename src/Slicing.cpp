@@ -5,6 +5,7 @@
 #include "constant.h"
 
 #include <cmath>
+#include <iostream>
 
 using namespace std;
 
@@ -17,6 +18,7 @@ Slicing::Slicing(string inf_file, string raw_file) : super::Method(inf_file, raw
 {
     super::volume.show();
 
+    this->_index = 0;
     this->_template = {
         {
             -1, 0, 0,
@@ -46,6 +48,9 @@ Slicing::Slicing(string inf_file, string raw_file) : super::Method(inf_file, raw
 
     this->generate_texture_1d();
     this->generate_texture_3d();
+
+    this->_vertex.resize(6);
+    this->calculate();
 }
 
 Slicing::~Slicing()
@@ -114,31 +119,42 @@ void Slicing::generate_texture_3d()
     }
 }
 
-void Slicing::push(glm::vec3 data)
+void Slicing::push(glm::vec3 data, int index)
 {
     for (auto i = 0; i < 3; i++) {
-        this->_vertex.push_back(data[i]);
+        this->_vertex[index].push_back(data[i]);
     }
 }
 
-void Slicing::calculate(double index, int max_index, glm::ivec3 shape)
+void Slicing::calculate()
 {
+    glm::ivec3 shape = super::volume.shape();
     glm::vec3 plane_position = super::volume_shape();
 
-    for (size_t i = 0; i < this->_template[max_index].size(); i += 3) {
-        glm::vec3 basic = glm::vec3(
-            this->_template[max_index][i + 0],
-            this->_template[max_index][i + 1],
-            this->_template[max_index][i + 2]
-        );
+    double range = 0.5;
 
-        glm::vec3 plane = basic * plane_position;
-        glm::vec3 texture = basic;
-        plane[max_index] = index;
-        texture[max_index] = index / shape[max_index];
+    for (size_t i = 0; i < this->_vertex.size(); i++) {
+        int index = i / 2;
+        double start = (i % 2 ? 0.0 : shape[index]);
+        double delta = (i % 2 ? range : -range);
 
-        this->push(plane);
-        this->push(texture);
+        for (auto j = 0; j < (shape[index] / range) + 1; j++, start += delta) {
+            for (size_t k = 0; k < this->_template[index].size(); k += 3) {
+                glm::vec3 basic = glm::vec3(
+                    this->_template[index][k + 0],
+                    this->_template[index][k + 1],
+                    this->_template[index][k + 2]
+                );
+
+                glm::vec3 plane = basic * plane_position;
+                glm::vec3 texture = basic;
+                plane[index] = start;
+                texture[index] = start / shape[index];
+
+                this->push(plane, i);
+                this->push(texture, i);
+            }
+        }
     }
 }
 
@@ -155,20 +171,9 @@ int compare(glm::vec3 view_position)
 
 void Slicing::run(glm::vec3 view_position)
 {
-    this->_vertex.clear();
-    this->_vertex.shrink_to_fit();
-
     int max_index = compare(view_position);
-    glm::ivec3 shape = super::volume.shape();
 
-    double range = 0.5;
-    int amount = (shape[max_index] / range) + 1;
-    double index = (view_position[max_index] >= 0 ? 0.0 : shape[max_index]);
-    double delta = (view_position[max_index] >= 0 ? range : -range);
-
-    for (auto i = 0; i < amount; i++, index += delta) {
-        this->calculate(index, max_index, shape);
-    }
+    this->_index = max_index * 2 + (view_position[max_index] >= 0);
 }
 
 vector<float>& Slicing::texture_1d()
@@ -193,7 +198,7 @@ glm::ivec3 Slicing::texture_3d_shape()
 
 vector<GLfloat>& Slicing::vertex()
 {
-    return this->_vertex;
+    return this->_vertex[this->_index];
 }
 
 vector<int> Slicing::attribute()
