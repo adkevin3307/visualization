@@ -28,7 +28,7 @@ public:
 	Slicing(string inf_file, string raw_file);
 	~Slicing();
 
-	void run(glm::vec3 view_position);
+	bool run(glm::vec3 view_position);
 	vector<float>& texture_1d();
 	vector<float>& texture_3d();
 	glm::ivec3 texture_1d_shape();

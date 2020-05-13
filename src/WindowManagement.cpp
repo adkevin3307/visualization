@@ -211,20 +211,23 @@ void WindowManagement::load(string filename, METHOD method, bool first)
                     texture_1d_shape = slicing.texture_1d_shape();
                     texture_3d_shape = slicing.texture_3d_shape();
                 }
-                slicing.run(this->camera.position());
 
-                Mesh temp_mesh(slicing, METHOD::SLICING);
-                temp_mesh.enable_texture(2);
-                temp_mesh.init();
-                temp_mesh.init_texture(GL_TEXTURE_1D, 0);
-                temp_mesh.init_texture(GL_TEXTURE_3D, 1);
-                temp_mesh.set_texture(0, texture_1d, texture_1d_shape);
-                temp_mesh.set_texture(1, texture_3d, texture_3d_shape);
+                if (slicing.run(this->camera.position())) {
+                    Mesh temp_mesh(slicing, METHOD::SLICING);
+                    temp_mesh.enable_texture(2);
+                    temp_mesh.init();
+                    temp_mesh.init_texture(GL_TEXTURE_1D, 0);
+                    temp_mesh.init_texture(GL_TEXTURE_3D, 1);
+                    temp_mesh.set_texture(0, texture_1d, texture_1d_shape);
+                    temp_mesh.set_texture(1, texture_3d, texture_3d_shape);
 
-                if (first)
-                    this->mesh.push_back(temp_mesh);
-                else
-                    this->mesh.back() = temp_mesh;
+                    if (first) {
+                        this->mesh.push_back(temp_mesh);
+                    }
+                    else {
+                        this->mesh.back() = temp_mesh;
+                    }
+                }
 
                 break;
             }

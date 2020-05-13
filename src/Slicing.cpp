@@ -5,7 +5,6 @@
 #include "constant.h"
 
 #include <cmath>
-#include <iostream>
 
 using namespace std;
 
@@ -18,7 +17,7 @@ Slicing::Slicing(string inf_file, string raw_file) : super::Method(inf_file, raw
 {
     super::volume.show();
 
-    this->_index = 0;
+    this->_index = -1;
     this->_template = {
         {
             -1, 0, 0,
@@ -68,7 +67,6 @@ double gaussian(double mu, double sigma, double value)
 
 void Slicing::generate_texture_1d()
 {
-    // double render_value = super::volume.average();
     glm::vec2 limit_value = super::volume.limit_value();
 
     this->_texture_1d.resize((limit_value.y - limit_value.x + 1) * 4, 0.0);
@@ -86,13 +84,6 @@ void Slicing::generate_texture_1d()
         this->_texture_1d[i + 2] = 0.0;
         this->_texture_1d[i + 3] = 0.1387;
     }
-
-    // for (size_t i = 0; i < this->_texture_1d.size(); i += 4) {
-    //     this->_texture_1d[i + 0] = gaussian((render_value - limit_value.x) * 4.0, 5.0, i) * 5.0;
-    //     this->_texture_1d[i + 1] = gaussian((render_value - limit_value.x) * 4.0, 5.0, i) * 5.0;
-    //     this->_texture_1d[i + 2] = gaussian((render_value - limit_value.x) * 4.0, 5.0, i) * 5.0;
-    //     this->_texture_1d[i + 3] = gaussian((render_value - limit_value.x) * 4.0, 5.0, i) * 5.0;
-    // }
 }
 
 void Slicing::generate_texture_3d()
@@ -169,11 +160,17 @@ int compare(glm::vec3 view_position)
     return -1;
 }
 
-void Slicing::run(glm::vec3 view_position)
+bool Slicing::run(glm::vec3 view_position)
 {
     int max_index = compare(view_position);
+    int temp = max_index * 2 + (view_position[max_index] >= 0);
 
-    this->_index = max_index * 2 + (view_position[max_index] >= 0);
+    if (this->_index == -1 || this->_index != temp) {
+        this->_index = temp;
+        return true;
+    }
+
+    return false;
 }
 
 vector<float>& Slicing::texture_1d()
