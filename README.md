@@ -16,7 +16,6 @@
 > * matplotlib 3.1.2
 
 ## Usage
-
 ### Compile and Execute
 * `make`
     * Compile all file (exclude test.cpp)
@@ -54,7 +53,6 @@
     * Control Clip Plane
 
 ## Class Structure
-
 #### `Volume`
 * read inf file and raw file
 * calculate vertices and gradient
