@@ -57,7 +57,7 @@ Slicing:
     empty constructor
 
 Slicing:
-    the constructor use super constructor to intialize Volume
+    the constructor use super constructor to initialize Volume
     - parameters:
         inf_file (string): inf file path
         raw_file (string): raw file path
