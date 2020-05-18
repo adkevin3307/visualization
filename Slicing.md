@@ -29,7 +29,7 @@ _texture_3d (vector<float>):
     per element should be (normal_x, normal_y, normal_z, intensity), look up texture for every point
 
 _template (vector<vector<float>>):
-    template for three axis (per axis ) slices coordinate
+    template for three axis (per axis 2 direction) slices coordinate
 ```
 
 ### Member Function
