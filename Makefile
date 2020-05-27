@@ -24,10 +24,6 @@ ifeq ($(findstring static, $(MAKECMDGOALS)), static)
 	CXXFLAGS += -static
 endif
 
-ifeq ($(findstring histogram, $(MAKECMDGOALS)), histogram)
-	CXXFLAGS += -DHISTOGRAM
-endif
-
 ifeq ($(OS), Windows_NT)
 	LIBS += -lglfw3 -lopengl32 -lgdi32
 
@@ -63,7 +59,7 @@ $(OBJ_DIR)/%.o: src/imgui/%.cpp
 $(OBJ_DIR)/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-all static histogram test: create_directory $(EXE) execute
+all static test: create_directory $(EXE) execute
 	@echo Compile and Execute Success
 
 create_directory:

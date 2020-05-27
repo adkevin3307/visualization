@@ -40,4 +40,5 @@ public:
     void enable_texture(int size = 1);
     void init_texture(GLenum target, int index);
     void set_texture(int index, vector<float> &texture_data, glm::ivec3 shape);
+    void set_vertex(vector<GLfloat> &vertex);
 };

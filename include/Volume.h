@@ -44,6 +44,7 @@ public:
     Volume(string inf_file, string raw_file);
     ~Volume();
 
+    vector<int> histogram();
     double average();
     glm::vec2 limit_value();
     glm::ivec3 shape();

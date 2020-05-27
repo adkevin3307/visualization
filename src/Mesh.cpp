@@ -126,6 +126,11 @@ void Mesh::set_texture(int index, vector<float> &texture_data, glm::ivec3 shape)
     glBindTexture(this->texture[index].second, 0);
 }
 
+void Mesh::set_vertex(vector<GLfloat> &vertex)
+{
+    this->vertex = vertex;
+}
+
 void Mesh::transform(Transformation &transformation)
 {
     transformation.init(TRANSFORMATION::MODEL);

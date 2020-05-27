@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <dirent.h>
+#include <cmath>
 
 #include "Method.h"
 #include "IsoSurface.h"
@@ -179,8 +180,9 @@ void WindowManagement::set_callback()
     glfwSetScrollCallback(this->window, scrollCallback);
 }
 
-void WindowManagement::load(string filename, METHOD method, bool first)
+vector<float> WindowManagement::load(string filename, METHOD method, bool first)
 {
+    vector<int> histogram_int;
     string inf_file = "./Data/Scalar/" + filename + ".inf", raw_file = "./Data/Scalar/" + filename + ".raw";
 
     this->shader_map[method].use();
@@ -197,36 +199,33 @@ void WindowManagement::load(string filename, METHOD method, bool first)
                 temp_mesh.init();
 
                 this->mesh.push_back(temp_mesh);
+
+                histogram_int = ((Method*)(&iso_surface))->histogram();
                 break;
             }
             case (METHOD::SLICING): {
                 static Slicing slicing;
-                static vector<GLfloat> texture_1d, texture_3d;
-                static glm::ivec3 texture_1d_shape, texture_3d_shape;
 
                 if (first) {
                     slicing = Slicing(inf_file, raw_file);
-                    texture_1d = slicing.texture_1d();
-                    texture_3d = slicing.texture_3d();
-                    texture_1d_shape = slicing.texture_1d_shape();
-                    texture_3d_shape = slicing.texture_3d_shape();
-                }
+                    slicing.run(this->camera.position());
 
-                if (slicing.run(this->camera.position())) {
                     Mesh temp_mesh(slicing, METHOD::SLICING);
                     temp_mesh.enable_texture(2);
                     temp_mesh.init();
                     temp_mesh.init_texture(GL_TEXTURE_1D, 0);
                     temp_mesh.init_texture(GL_TEXTURE_3D, 1);
-                    temp_mesh.set_texture(0, texture_1d, texture_1d_shape);
-                    temp_mesh.set_texture(1, texture_3d, texture_3d_shape);
+                    temp_mesh.set_texture(0, slicing.texture_1d(), slicing.texture_1d_shape());
+                    temp_mesh.set_texture(1, slicing.texture_3d(), slicing.texture_3d_shape());
 
-                    if (first) {
-                        this->mesh.push_back(temp_mesh);
-                    }
-                    else {
-                        this->mesh.back() = temp_mesh;
-                    }
+                    this->mesh.push_back(temp_mesh);
+
+                    histogram_int = ((Method*)(&slicing))->histogram();
+                }
+
+                if (slicing.run(this->camera.position())) {
+                    this->mesh.back().set_vertex(slicing.vertex());
+                    this->mesh.back().init();
                 }
 
                 break;
@@ -240,6 +239,10 @@ void WindowManagement::load(string filename, METHOD method, bool first)
     }
 
     if (first) cout << "==============================================" << '\n';
+
+    vector<float> histogram(histogram_int.begin(), histogram_int.end());
+
+    return histogram;
 }
 
 void generate_combo(map<string, METHOD> &methods, vector<string> &filenames)
@@ -277,6 +280,8 @@ void WindowManagement::set_general()
 
     static float clip_normal[] = { 0.0, 0.0, 0.0 }, clip_distance = 1.0;
 
+    static vector<float> histogram;
+
     if (first_time) generate_combo(methods, filenames);
     first_time = false;
 
@@ -284,7 +289,7 @@ void WindowManagement::set_general()
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Once);
     ImGui::SetNextWindowSize(ImVec2(WIDTH / 3, HEIGHT / 3), ImGuiCond_Once);
 
-    // render GUI
+    // Controller window
     ImGui::Begin("Controller");
     ImGui::SetWindowFontScale(1.2);
 
@@ -313,12 +318,13 @@ void WindowManagement::set_general()
     if (ImGui::Button("Clean")) {
         current_method = METHOD::NONE;
         this->mesh.clear();
+        histogram.clear();
     }
 
     ImGui::SameLine();
     if (ImGui::Button("Load")) {
         current_method = methods[method];
-        this->load(filename, methods[method], true);
+        histogram = this->load(filename, methods[method], true);
     }
 
     ImGui::SetWindowFontScale(1.0);
@@ -326,6 +332,18 @@ void WindowManagement::set_general()
     ImGui::SliderFloat("Clip Plane Distanse", &clip_distance, -150.0, 150.0);
 
     ImGui::End();
+
+    if (histogram.size() != 0) {
+        ImVec2 histogram_size = ImVec2(WIDTH / 3 - 15, HEIGHT / 3 - 35);
+        float max_count = *max_element(histogram.begin(), histogram.end()) + 10;
+        // set Histogram position and size
+        ImGui::SetNextWindowPos(ImVec2(10, 10 + HEIGHT / 3 + 10), ImGuiCond_Once);
+        ImGui::SetNextWindowSize(ImVec2(WIDTH / 3, HEIGHT / 3), ImGuiCond_Once);
+        // Histogram window
+        ImGui::Begin("Histogram");
+        ImGui::PlotHistogram("## Data", histogram.data(), histogram.size(), 0, filename.c_str(), 0.0, max_count, histogram_size);
+        ImGui::End();
+    }
 
     glm::vec3 temp = glm::make_vec3(clip_normal);
     if (glm::length(temp) > EPSILON) temp = glm::normalize(temp);

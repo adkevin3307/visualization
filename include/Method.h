@@ -19,6 +19,7 @@ public:
     virtual ~Method();
 
     glm::vec3 volume_shape();
+    vector<int> histogram();
 
     virtual vector<GLfloat>& vertex() = 0;
     virtual vector<int> attribute() = 0;

@@ -166,23 +166,30 @@ void Volume::load_raw()
 
 void Volume::calculate()
 {
-#ifdef HISTOGRAM
-    fstream file;
-    file.open("./Data/Scalar/histogram.txt", ios::out | ios::trunc);
-#endif
     for (auto i = 0; i < this->_shape.x; i++) {
         for (auto j = 0; j < this->_shape.y; j++) {
             for (auto k = 0; k < this->_shape.z; k++) {
                 this->data[i][j][k].second = this->gradient(i, j, k);
-#ifdef HISTOGRAM
-                file << this->data[i][j][k].first << ' ';
-#endif
             }
         }
     }
-#ifdef HISTOGRAM
-    file.close();
-#endif
+}
+
+vector<int> Volume::histogram()
+{
+    vector<int> count;
+    count.resize(256, 0);
+    double length = (this->_max_value - this->_min_value + 1) / 256.0;
+
+    for (auto i = 0; i < this->_shape.x; i++) {
+        for (auto j = 0; j < this->_shape.y; j++) {
+            for (auto k = 0; k < this->_shape.z; k++) {
+                count[(int)((this->data[i][j][k].first - this->_min_value) / length)]++;
+            }
+        }
+    }
+
+    return count;
 }
 
 double Volume::average()

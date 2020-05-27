@@ -21,3 +21,8 @@ glm::vec3 Method::volume_shape()
 {
     return glm::vec3(this->volume.shape()) * this->volume.voxel_size();
 }
+
+vector<int> Method::histogram()
+{
+    return this->volume.histogram();
+}
