@@ -31,7 +31,7 @@ private:
     void set_callback();
 
     vector<float> load(string filename, METHOD method, bool first);
-    void set_general();
+    void gui();
 
 public:
     WindowManagement();

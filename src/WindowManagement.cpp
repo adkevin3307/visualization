@@ -29,7 +29,15 @@ WindowManagement::~WindowManagement()
 {
 }
 
-void APIENTRY debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
+void APIENTRY debug_callback(
+    GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar *message,
+    const void *userParam
+)
 {
     // ignore non-significant error / warning codes
     if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
@@ -267,7 +275,7 @@ void generate_combo(map<string, METHOD> &methods, vector<string> &filenames)
     sort(filenames.begin(), filenames.end());
 }
 
-void WindowManagement::set_general()
+void WindowManagement::gui()
 {
     static METHOD current_method = METHOD::NONE;
     static bool first_time = true;
@@ -334,14 +342,40 @@ void WindowManagement::set_general()
     ImGui::End();
 
     if (histogram.size() != 0) {
+        vector<float> accumulation(histogram.size(), 0.0);
+        accumulation[0] = histogram[0];
+        for (size_t i = 1; i < accumulation.size(); i++) {
+            accumulation[i] += accumulation[i - 1] + histogram[i];
+        }
+
         ImVec2 histogram_size = ImVec2(WIDTH / 3 - 15, HEIGHT / 3 - 35);
+        ImVec2 accumulation_size = ImVec2(WIDTH / 3 - 15, HEIGHT / 3 - 35);
         float max_count = *max_element(histogram.begin(), histogram.end()) + 10;
+        float max_value = *max_element(accumulation.begin(), accumulation.end()) + 10;
+
         // set Histogram position and size
         ImGui::SetNextWindowPos(ImVec2(10, 10 + HEIGHT / 3 + 10), ImGuiCond_Once);
-        ImGui::SetNextWindowSize(ImVec2(WIDTH / 3, HEIGHT / 3), ImGuiCond_Once);
+        ImGui::SetNextWindowSize(ImVec2(WIDTH / 3, (HEIGHT / 3) * 2 - 30), ImGuiCond_Once);
         // Histogram window
-        ImGui::Begin("Histogram");
-        ImGui::PlotHistogram("## Data", histogram.data(), histogram.size(), 0, filename.c_str(), 0.0, max_count, histogram_size);
+        ImGui::Begin("Information");
+        ImGui::PlotHistogram(
+            "## Histogram",
+            histogram.data(),
+            histogram.size(),
+            0,
+            filename.c_str(),
+            0.0, max_count,
+            histogram_size
+        );
+        ImGui::PlotLines(
+            "## Accumulation",
+            accumulation.data(),
+            accumulation.size(),
+            0,
+            filename.c_str(),
+            0.0, max_value,
+            accumulation_size
+        );
         ImGui::End();
     }
 
@@ -424,7 +458,7 @@ void WindowManagement::main_loop()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        this->set_general();
+        this->gui();
 
         for (size_t i = 0; i < this->mesh.size(); i++) {
             Transformation transformation(this->shader_map[this->mesh[i].method()]);
