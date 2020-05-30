@@ -341,7 +341,7 @@ void WindowManagement::gui()
 
     ImGui::End();
 
-    if (histogram.size() != 0) {
+    if (current_method != METHOD::NONE) {
         vector<float> accumulation(histogram.size(), 0.0);
         accumulation[0] = histogram[0];
         for (size_t i = 1; i < accumulation.size(); i++) {
