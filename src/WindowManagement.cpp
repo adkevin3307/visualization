@@ -306,6 +306,8 @@ double gaussian_2d(glm::vec2 mu, glm::vec2 sigma, glm::vec2 value)
 void WindowManagement::gui()
 {
     static Volume volume;
+    static bool volume_loaded = false;
+
     static METHOD current_method = METHOD::NONE;
     static bool first_time = true;
 
@@ -363,11 +365,12 @@ void WindowManagement::gui()
     }
 
     if (ImGui::Button("Information")) {
+        volume_loaded = true;
         volume = this->load_volume(filename, histogram, distribution);
     }
 
     ImGui::SameLine();
-    if (ImGui::Button("Load")) {
+    if (volume_loaded && ImGui::Button("Load")) {
         current_method = methods[method];
         this->load(volume, methods[method], false);
     }
@@ -375,6 +378,8 @@ void WindowManagement::gui()
     ImGui::SameLine();
     if (ImGui::Button("Clean")) {
         current_method = METHOD::NONE;
+
+        volume_loaded = false;
 
         this->mesh.clear();
         histogram.clear();
