@@ -44,8 +44,8 @@ public:
     Volume(string inf_file, string raw_file);
     ~Volume();
 
-    vector<int> histogram();
-    vector<vector<int>> distribution_table(double gradient_max);
+    vector<float> histogram();
+    vector<vector<float>> distribution(double gradient_max);
     double average();
     glm::vec2 limit_value();
     glm::ivec3 shape();

@@ -191,26 +191,30 @@ void WindowManagement::set_callback()
     glfwSetScrollCallback(this->window, scrollCallback);
 }
 
-void WindowManagement::load(
-    string filename,
-    METHOD method,
-    vector<float> &histogram,
-    vector<vector<float>> &distribution,
-    bool first
-)
+Volume WindowManagement::load_volume(string filename, vector<float> &histogram, vector<vector<float>> &distribution)
 {
-    vector<int> histogram_int;
-    vector<vector<int>> distribution_int;
     string inf_file = "./Data/Scalar/" + filename + ".inf", raw_file = "./Data/Scalar/" + filename + ".raw";
 
-    this->shader_map[method].use();
+    Volume volume(inf_file, raw_file);
 
-    if (first) cout << "==================== Info ====================" << '\n';
+    cout << "==================== Info ====================" << '\n';
+    volume.show();
+    cout << "==============================================" << '\n';
+
+    histogram = volume.histogram();
+    distribution = volume.distribution(256.0);
+
+    return volume;
+}
+
+void WindowManagement::load(Volume &volume, METHOD method, bool update)
+{
+    this->shader_map[method].use();
 
     try {
         switch (method) {
             case (METHOD::ISOSURFACE): {
-                IsoSurface iso_surface(inf_file, raw_file);
+                IsoSurface iso_surface(volume);
                 iso_surface.run();
 
                 Mesh temp_mesh(iso_surface, METHOD::ISOSURFACE);
@@ -218,15 +222,13 @@ void WindowManagement::load(
 
                 this->mesh.push_back(temp_mesh);
 
-                histogram_int = ((Method*)(&iso_surface))->histogram();
-                distribution_int = ((Method*)(&iso_surface))->distribution_table(256.0);
                 break;
             }
             case (METHOD::SLICING): {
                 static Slicing slicing;
 
-                if (first) {
-                    slicing = Slicing(inf_file, raw_file);
+                if (update == false) {
+                    slicing = Slicing(volume);
                     slicing.run(this->camera.position());
 
                     Mesh temp_mesh(slicing, METHOD::SLICING);
@@ -238,9 +240,6 @@ void WindowManagement::load(
                     temp_mesh.set_texture(1, slicing.texture_3d(), slicing.texture_3d_shape());
 
                     this->mesh.push_back(temp_mesh);
-
-                    histogram_int = ((Method*)(&slicing))->histogram();
-                    distribution_int = ((Method*)(&slicing))->distribution_table(256.0);
                 }
 
                 if (slicing.run(this->camera.position())) {
@@ -256,17 +255,6 @@ void WindowManagement::load(
     }
     catch (const runtime_error &error) {
         cerr << error.what() << '\n';
-    }
-
-    if (first) {
-        cout << "==============================================" << '\n';
-
-        histogram.assign(histogram_int.begin(), histogram_int.end());
-
-        distribution.resize(distribution_int.size());
-        for (size_t i = 0; i < distribution.size(); i++) {
-            distribution[i].assign(distribution_int[i].begin(), distribution_int[i].end());
-        }
     }
 }
 
@@ -301,10 +289,27 @@ double gaussian(double mu, double sigma, double value)
     return result;
 }
 
+double gaussian_2d(glm::vec2 mu, glm::vec2 sigma, glm::vec2 value)
+{
+    double coefficient = sqrt(sigma.x + sigma.y);
+
+    double temp[2];
+    for (auto i = 0; i < 2; i++) {
+        temp[i] = ((value[i] - mu[i]) * (value[i] - mu[i])) / (2 * sigma[i] * sigma[i]);
+    }
+
+    double result = exp(-1 * (temp[0] + temp[1]));
+
+    return result / coefficient;
+}
+
 void WindowManagement::gui()
 {
+    static Volume volume;
     static METHOD current_method = METHOD::NONE;
     static bool first_time = true;
+
+    static double size = 20.0 * log2(256.0) + 1.0;
 
     static string method = "Iso Surface";
     static map<string, METHOD> methods;
@@ -316,10 +321,14 @@ void WindowManagement::gui()
 
     static vector<float> histogram;
     static vector<vector<float>> distribution;
-    static float red_parameter[2] = { 0.0, 0.0 };
-    static float green_parameter[2] = { 0.0, 0.0 };
-    static float blue_parameter[2] = { 0.0, 0.0 };
+
+    static float red_parameter[2] = { 0.0, 0.0 }; // mu, sigma
+    static float green_parameter[2] = { 0.0, 0.0 }; // mu, sigma
+    static float blue_parameter[2] = { 0.0, 0.0 }; // mu, sigma
+    // static float alpha_parameter[4] = { 0.0, 0.0, 0.0, 0.0 }; // mu_x, mu_y, sigma_x, sigma_y
+
     static vector<float> red(256, 0.0), green(256, 0.0), blue(256, 0.0);
+    // static vector<vector<float>> alpha(256, vector<float>(size, 0.0));
 
     if (first_time) generate_combo(methods, filenames);
     first_time = false;
@@ -353,17 +362,23 @@ void WindowManagement::gui()
         ImGui::EndCombo();
     }
 
-    ImGui::SameLine();
-    if (ImGui::Button("Clean")) {
-        current_method = METHOD::NONE;
-        this->mesh.clear();
-        histogram.clear();
+    if (ImGui::Button("Information")) {
+        volume = this->load_volume(filename, histogram, distribution);
     }
 
     ImGui::SameLine();
     if (ImGui::Button("Load")) {
         current_method = methods[method];
-        this->load(filename, methods[method], histogram, distribution, true);
+        this->load(volume, methods[method], false);
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Clean")) {
+        current_method = METHOD::NONE;
+
+        this->mesh.clear();
+        histogram.clear();
+        distribution.clear();
     }
 
     ImGui::SetWindowFontScale(1.0);
@@ -374,14 +389,29 @@ void WindowManagement::gui()
     ImGui::SliderFloat2("Green Color", green_parameter, 0.0, 255.0);
     ImGui::SliderFloat2("Blue Color", blue_parameter, 0.0, 255.0);
 
+    // ImGui::SliderFloat("Alpha Center X", alpha_parameter + 0, 0.0, 255.0);
+    // ImGui::SliderFloat("Alpha Center Y", alpha_parameter + 1, 0.0, size);
+    // ImGui::SliderFloat("Alpha Sigma X", alpha_parameter + 2, 0.0, 255.0);
+    // ImGui::SliderFloat("Alpha Sigma Y", alpha_parameter + 3, 0.0, size);
+
     ImGui::End();
 
-    if (current_method != METHOD::NONE) {
+    if (histogram.size() != 0) {
         for (auto i = 0; i < 256; i++) {
             red[i] = gaussian(red_parameter[0], red_parameter[1], i);
             green[i] = gaussian(green_parameter[0], green_parameter[1], i);
             blue[i] = gaussian(blue_parameter[0], blue_parameter[1], i);
         }
+
+        // for (size_t i = 0; i < alpha.size(); i++) {
+        //     for (size_t j = 0; j < alpha[i].size(); j++) {
+        //         alpha[i][j] = gaussian_2d(
+        //             glm::vec2(alpha_parameter[0], alpha_parameter[1]),
+        //             glm::vec2(alpha_parameter[2], alpha_parameter[3]),
+        //             glm::vec2(i, j)
+        //         );
+        //     }
+        // }
 
         float max_amount = *max_element(histogram.begin(), histogram.end()) + 10;
 
@@ -409,16 +439,27 @@ void WindowManagement::gui()
         }
         ImPlot::PopStyleColor(4);
         // distribution
-        double size = 20.0 * log2(256.0) + 1.0;
         ImPlot::SetNextPlotLimits(0.0, 256.0, 0.0, size, ImGuiCond_Always);
-        if (ImPlot::BeginPlot("Distribution")) {
+        if (ImPlot::BeginPlot("Distribution", "Intensity", "Gradient Magnitude")) {
             for (size_t i = 0; i < distribution.size(); i++) {
                 for (size_t j = 0; j < distribution[i].size(); j++) {
                     ImVec2 rmin = ImPlot::PlotToPixels(ImPlotPoint(i, j + 1));
                     ImVec2 rmax = ImPlot::PlotToPixels(ImPlotPoint(i + 1, j));
 
-                    int color = distribution[i][j];
-                    ImGui::GetWindowDrawList()->AddRectFilled(rmin, rmax, IM_COL32(color, color, color, 255));
+                    ImGui::GetWindowDrawList()->AddRectFilled(
+                        rmin,
+                        rmax,
+                        IM_COL32(distribution[i][j], distribution[i][j], distribution[i][j], 255)
+                    );
+
+                    // if (alpha[i][j] != 0.0) {
+                    //     int alpha_value = min(255, (int)(alpha[i][j] * 10 * 255));
+                    //     ImGui::GetWindowDrawList()->AddRectFilled(
+                    //         rmin,
+                    //         rmax,
+                    //         IM_COL32(255, 0, 0, alpha_value)
+                    //     );
+                    // }
                 }
             }
             ImPlot::EndPlot();
@@ -436,7 +477,10 @@ void WindowManagement::gui()
         this->shader_map[current_method].set_uniform("light_pos", this->camera.position());
         this->shader_map[current_method].set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
     }
-    if (current_method == METHOD::SLICING) this->load(filename, METHOD::SLICING, histogram, distribution, false);
+
+    if (current_method == METHOD::SLICING) {
+        this->load(volume, methods[method], true);
+    }
 }
 
 void WindowManagement::init()

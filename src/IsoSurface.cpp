@@ -2,10 +2,14 @@
 
 #include "constant.h"
 
-#include <iostream>
 #include <algorithm>
 
 using namespace std;
+
+IsoSurface::IsoSurface(Volume &volume) : super::Method(volume)
+{
+    this->iso_value = super::volume.average();
+}
 
 IsoSurface::IsoSurface(string inf_file, string raw_file) : super::Method(inf_file, raw_file)
 {
@@ -53,9 +57,6 @@ pair<glm::vec3, glm::vec3> IsoSurface::interpolation(glm::ivec3 p1, glm::ivec3 p
 
 void IsoSurface::run()
 {
-    super::volume.show();
-    cout << "iso value: " << this->iso_value << '\n';
-
     vector<pair<glm::vec3, glm::vec3>> v(12);
 
     this->_vertex.clear();
@@ -102,8 +103,6 @@ void IsoSurface::run()
             }
         }
     }
-
-    cout << "vertex size: " << this->_vertex.size() << '\n';
 }
 
 vector<GLfloat>& IsoSurface::vertex()

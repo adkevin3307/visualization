@@ -9,10 +9,25 @@ Slicing::Slicing()
 
 }
 
+Slicing::Slicing(Volume &volume) : super::Method(volume)
+{
+    this->init();
+}
+
 Slicing::Slicing(string inf_file, string raw_file) : super::Method(inf_file, raw_file)
 {
     super::volume.show();
 
+    this->init();
+}
+
+Slicing::~Slicing()
+{
+
+}
+
+void Slicing::init()
+{
     this->_index = -1;
     this->_template = {
         {
@@ -46,11 +61,6 @@ Slicing::Slicing(string inf_file, string raw_file) : super::Method(inf_file, raw
 
     this->_vertex.resize(6);
     this->calculate();
-}
-
-Slicing::~Slicing()
-{
-
 }
 
 void Slicing::generate_texture_1d()

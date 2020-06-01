@@ -6,6 +6,7 @@
 #include <string>
 
 #include "Method.h"
+#include "Volume.h"
 
 using namespace std;
 
@@ -18,6 +19,7 @@ private:
 	vector<float> _texture_1d, _texture_3d;
 	vector<vector<float>> _template;
 
+	void init();
 	void generate_texture_1d();
 	void generate_texture_3d();
 	void push(glm::vec3 data, int index);
@@ -25,6 +27,7 @@ private:
 
 public:
 	Slicing();
+	Slicing(Volume &volume);
 	Slicing(string inf_file, string raw_file);
 	~Slicing();
 

@@ -7,6 +7,7 @@
 #include <iomanip>
 
 #include "Method.h"
+#include "Volume.h"
 
 using namespace std;
 
@@ -20,6 +21,7 @@ private:
 	pair<glm::vec3, glm::vec3> interpolation(glm::ivec3 p1, glm::ivec3 p2);
 
 public:
+	IsoSurface(Volume &volume);
 	IsoSurface(string inf_file, string raw_file);
 	IsoSurface(string inf_file, string raw_file, float iso_value);
 	~IsoSurface();

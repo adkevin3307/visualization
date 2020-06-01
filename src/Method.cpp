@@ -12,6 +12,11 @@ Method::Method(string inf_file, string raw_file)
     this->volume = Volume(inf_file, raw_file);
 }
 
+Method::Method(Volume &volume)
+{
+    this->volume = volume;
+}
+
 Method::~Method()
 {
 
@@ -20,14 +25,4 @@ Method::~Method()
 glm::vec3 Method::volume_shape()
 {
     return glm::vec3(this->volume.shape()) * this->volume.voxel_size();
-}
-
-vector<int> Method::histogram()
-{
-    return this->volume.histogram();
-}
-
-vector<vector<int>> Method::distribution_table(double gradient_max)
-{
-    return this->volume.distribution_table(gradient_max);
 }

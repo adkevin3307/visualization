@@ -16,11 +16,10 @@ protected:
 public:
     Method();
     Method(string inf_file, string raw_file);
+    Method(Volume &volume);
     virtual ~Method();
 
     glm::vec3 volume_shape();
-    vector<int> histogram();
-    vector<vector<int>> distribution_table(double gradient_max);
 
     virtual vector<GLfloat>& vertex() = 0;
     virtual vector<int> attribute() = 0;
