@@ -192,6 +192,31 @@ vector<int> Volume::histogram()
     return count;
 }
 
+vector<vector<int>> Volume::distribution_table(double gradient_max)
+{
+    vector<vector<int>> result;
+    int size = (20 * log2(gradient_max)) + 1;
+    result.resize(256, vector<int>(size, 0));
+    double length = (this->_max_value - this->_min_value + 1) / 256.0;
+
+    for (auto i = 0; i < this->_shape.x; i++) {
+        for (auto j = 0; j < this->_shape.y; j++) {
+            for (auto k = 0; k < this->_shape.z; k++) {
+                double magnitude = glm::length(this->data[i][j][k].second);
+                magnitude = std::clamp(magnitude, 1.0, gradient_max);
+                magnitude = 20 * log2(magnitude);
+
+                int index_x = (this->data[i][j][k].first - this->_min_value) / length;
+                int index_y = magnitude;
+
+                result[index_x][index_y]++;
+            }
+        }
+    }
+
+    return result;
+}
+
 double Volume::average()
 {
     return (this->_max_value + this->_min_value) / 2.0;

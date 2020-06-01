@@ -9,11 +9,12 @@ endif
 
 SOURCES += $(wildcard src/glad/*.c)
 SOURCES += $(wildcard src/imgui/*.cpp)
+SOURCES += $(wildcard src/implot/*.cpp)
 SOURCES += $(wildcard src/*.cpp)
 
 OBJS = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(basename $(notdir $(SOURCES)))))
 
-CXXFLAGS = -I./include -Wall
+CXXFLAGS = -std=c++17 -I./include -Wall
 
 LIBS = -L./lib
 
@@ -54,6 +55,9 @@ $(OBJ_DIR)/%.o: src/glad/%.c
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 $(OBJ_DIR)/%.o: src/imgui/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+$(OBJ_DIR)/%.o: src/implot/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 $(OBJ_DIR)/%.o: src/%.cpp

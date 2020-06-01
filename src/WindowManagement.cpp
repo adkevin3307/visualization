@@ -1,5 +1,7 @@
 #include "WindowManagement.h"
 
+#define _USE_MATH_DEFINES
+
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -7,6 +9,7 @@
 #include <imgui/imgui_stdlib.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
+#include <implot/implot.h>
 #include <iostream>
 #include <algorithm>
 #include <stdexcept>
@@ -188,9 +191,16 @@ void WindowManagement::set_callback()
     glfwSetScrollCallback(this->window, scrollCallback);
 }
 
-vector<float> WindowManagement::load(string filename, METHOD method, bool first)
+void WindowManagement::load(
+    string filename,
+    METHOD method,
+    vector<float> &histogram,
+    vector<vector<float>> &distribution,
+    bool first
+)
 {
     vector<int> histogram_int;
+    vector<vector<int>> distribution_int;
     string inf_file = "./Data/Scalar/" + filename + ".inf", raw_file = "./Data/Scalar/" + filename + ".raw";
 
     this->shader_map[method].use();
@@ -209,6 +219,7 @@ vector<float> WindowManagement::load(string filename, METHOD method, bool first)
                 this->mesh.push_back(temp_mesh);
 
                 histogram_int = ((Method*)(&iso_surface))->histogram();
+                distribution_int = ((Method*)(&iso_surface))->distribution_table(256.0);
                 break;
             }
             case (METHOD::SLICING): {
@@ -229,6 +240,7 @@ vector<float> WindowManagement::load(string filename, METHOD method, bool first)
                     this->mesh.push_back(temp_mesh);
 
                     histogram_int = ((Method*)(&slicing))->histogram();
+                    distribution_int = ((Method*)(&slicing))->distribution_table(256.0);
                 }
 
                 if (slicing.run(this->camera.position())) {
@@ -246,11 +258,16 @@ vector<float> WindowManagement::load(string filename, METHOD method, bool first)
         cerr << error.what() << '\n';
     }
 
-    if (first) cout << "==============================================" << '\n';
+    if (first) {
+        cout << "==============================================" << '\n';
 
-    vector<float> histogram(histogram_int.begin(), histogram_int.end());
+        histogram.assign(histogram_int.begin(), histogram_int.end());
 
-    return histogram;
+        distribution.resize(distribution_int.size());
+        for (size_t i = 0; i < distribution.size(); i++) {
+            distribution[i].assign(distribution_int[i].begin(), distribution_int[i].end());
+        }
+    }
 }
 
 void generate_combo(map<string, METHOD> &methods, vector<string> &filenames)
@@ -275,6 +292,15 @@ void generate_combo(map<string, METHOD> &methods, vector<string> &filenames)
     sort(filenames.begin(), filenames.end());
 }
 
+double gaussian(double mu, double sigma, double value)
+{
+    // double coefficient = sigma * sqrt(2 * M_PI);
+    double result = exp(-1 * (value - mu) * (value - mu) / (2 * sigma * sigma));
+
+    // return result / coefficient;
+    return result;
+}
+
 void WindowManagement::gui()
 {
     static METHOD current_method = METHOD::NONE;
@@ -289,6 +315,11 @@ void WindowManagement::gui()
     static float clip_normal[] = { 0.0, 0.0, 0.0 }, clip_distance = 1.0;
 
     static vector<float> histogram;
+    static vector<vector<float>> distribution;
+    static float red_parameter[2] = { 0.0, 0.0 };
+    static float green_parameter[2] = { 0.0, 0.0 };
+    static float blue_parameter[2] = { 0.0, 0.0 };
+    static vector<float> red(256, 0.0), green(256, 0.0), blue(256, 0.0);
 
     if (first_time) generate_combo(methods, filenames);
     first_time = false;
@@ -332,50 +363,66 @@ void WindowManagement::gui()
     ImGui::SameLine();
     if (ImGui::Button("Load")) {
         current_method = methods[method];
-        histogram = this->load(filename, methods[method], true);
+        this->load(filename, methods[method], histogram, distribution, true);
     }
 
     ImGui::SetWindowFontScale(1.0);
     ImGui::SliderFloat3("Clip Plane Normal", clip_normal, -1.0, 1.0);
     ImGui::SliderFloat("Clip Plane Distanse", &clip_distance, -150.0, 150.0);
 
+    ImGui::SliderFloat2("Red Color", red_parameter, 0.0, 255.0);
+    ImGui::SliderFloat2("Green Color", green_parameter, 0.0, 255.0);
+    ImGui::SliderFloat2("Blue Color", blue_parameter, 0.0, 255.0);
+
     ImGui::End();
 
     if (current_method != METHOD::NONE) {
-        vector<float> accumulation(histogram.size(), 0.0);
-        accumulation[0] = histogram[0];
-        for (size_t i = 1; i < accumulation.size(); i++) {
-            accumulation[i] += accumulation[i - 1] + histogram[i];
+        for (auto i = 0; i < 256; i++) {
+            red[i] = gaussian(red_parameter[0], red_parameter[1], i);
+            green[i] = gaussian(green_parameter[0], green_parameter[1], i);
+            blue[i] = gaussian(blue_parameter[0], blue_parameter[1], i);
         }
 
-        ImVec2 histogram_size = ImVec2(WIDTH / 3 - 15, HEIGHT / 3 - 35);
-        ImVec2 accumulation_size = ImVec2(WIDTH / 3 - 15, HEIGHT / 3 - 35);
-        float max_count = *max_element(histogram.begin(), histogram.end()) + 10;
-        float max_value = *max_element(accumulation.begin(), accumulation.end()) + 10;
+        float max_amount = *max_element(histogram.begin(), histogram.end()) + 10;
 
-        // set Histogram position and size
-        ImGui::SetNextWindowPos(ImVec2(10, 10 + HEIGHT / 3 + 10), ImGuiCond_Once);
-        ImGui::SetNextWindowSize(ImVec2(WIDTH / 3, (HEIGHT / 3) * 2 - 30), ImGuiCond_Once);
-        // Histogram window
+        // set Information position and size
+        ImGui::SetNextWindowPos(ImVec2(WIDTH - (WIDTH / 3) - 10, 10), ImGuiCond_Once);
+        ImGui::SetNextWindowSize(ImVec2(WIDTH / 3, (HEIGHT / 3) * 2 + 40), ImGuiCond_Once);
+
         ImGui::Begin("Information");
-        ImGui::PlotHistogram(
-            "## Histogram",
-            histogram.data(),
-            histogram.size(),
-            0,
-            filename.c_str(),
-            0.0, max_count,
-            histogram_size
-        );
-        ImGui::PlotLines(
-            "## Accumulation",
-            accumulation.data(),
-            accumulation.size(),
-            0,
-            filename.c_str(),
-            0.0, max_value,
-            accumulation_size
-        );
+        // histogram
+        ImPlot::SetNextPlotLimits(0.0, 256.0, 0.0, max_amount, ImGuiCond_Always);
+        ImPlot::SetNextPlotLimitsY(0.0, 1.0, ImGuiCond_Always, 1);
+        if (ImPlot::BeginPlot("## RGB", "Intensity", "Amount")) {
+            ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(128, 128, 128, 255));
+            ImPlot::PlotBars(filename.c_str(), histogram.data(), histogram.size());
+
+            ImPlot::SetPlotYAxis(1);
+            ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(255, 0, 0, 255));
+            ImPlot::PlotLine("Red", red.data(), red.size());
+            ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(0, 255, 0, 255));
+            ImPlot::PlotLine("Green", green.data(), green.size());
+            ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(0, 0, 255, 255));
+            ImPlot::PlotLine("Blue", blue.data(), blue.size());
+
+            ImPlot::EndPlot();
+        }
+        ImPlot::PopStyleColor(4);
+        // distribution
+        double size = 20.0 * log2(256.0) + 1.0;
+        ImPlot::SetNextPlotLimits(0.0, 256.0, 0.0, size, ImGuiCond_Always);
+        if (ImPlot::BeginPlot("Distribution")) {
+            for (size_t i = 0; i < distribution.size(); i++) {
+                for (size_t j = 0; j < distribution[i].size(); j++) {
+                    ImVec2 rmin = ImPlot::PlotToPixels(ImPlotPoint(i, j + 1));
+                    ImVec2 rmax = ImPlot::PlotToPixels(ImPlotPoint(i + 1, j));
+
+                    int color = distribution[i][j];
+                    ImGui::GetWindowDrawList()->AddRectFilled(rmin, rmax, IM_COL32(color, color, color, 255));
+                }
+            }
+            ImPlot::EndPlot();
+        }
         ImGui::End();
     }
 
@@ -389,7 +436,7 @@ void WindowManagement::gui()
         this->shader_map[current_method].set_uniform("light_pos", this->camera.position());
         this->shader_map[current_method].set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
     }
-    if (current_method == METHOD::SLICING) this->load(filename, METHOD::SLICING, false);
+    if (current_method == METHOD::SLICING) this->load(filename, METHOD::SLICING, histogram, distribution, false);
 }
 
 void WindowManagement::init()

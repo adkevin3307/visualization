@@ -20,6 +20,7 @@ public:
 
     glm::vec3 volume_shape();
     vector<int> histogram();
+    vector<vector<int>> distribution_table(double gradient_max);
 
     virtual vector<GLfloat>& vertex() = 0;
     virtual vector<int> attribute() = 0;

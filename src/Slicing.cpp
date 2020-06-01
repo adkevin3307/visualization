@@ -1,10 +1,6 @@
 #include "Slicing.h"
 
-#define _USE_MATH_DEFINES
-
 #include "constant.h"
-
-#include <cmath>
 
 using namespace std;
 
@@ -55,14 +51,6 @@ Slicing::Slicing(string inf_file, string raw_file) : super::Method(inf_file, raw
 Slicing::~Slicing()
 {
 
-}
-
-double gaussian(double mu, double sigma, double value)
-{
-    double coefficient = sigma * sqrt(2 * M_PI);
-    double temp = exp(-1 * (value - mu) * (value - mu) / (2 * sigma * sigma));
-
-    return temp / coefficient;
 }
 
 void Slicing::generate_texture_1d()

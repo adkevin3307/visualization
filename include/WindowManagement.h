@@ -30,7 +30,7 @@ private:
 
     void set_callback();
 
-    vector<float> load(string filename, METHOD method, bool first);
+    void load(string filename, METHOD method, vector<float> &histogram, vector<vector<float>> &distribution, bool first);
     void gui();
 
 public:

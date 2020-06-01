@@ -26,3 +26,8 @@ vector<int> Method::histogram()
 {
     return this->volume.histogram();
 }
+
+vector<vector<int>> Method::distribution_table(double gradient_max)
+{
+    return this->volume.distribution_table(gradient_max);
+}
