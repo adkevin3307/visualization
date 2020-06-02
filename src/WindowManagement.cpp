@@ -298,7 +298,7 @@ void WindowManagement::load(Volume &volume, METHOD method, bool update)
     if (update == false) cout << "==============================================" << '\n';
 }
 
-void generate_combo(map<string, METHOD> &methods, vector<string> &filenames, vector<string> &color_combo)
+void generate_combo(map<string, METHOD> &methods, vector<string> &filenames)
 {
     // generate methods combo
     methods["Iso Surface"] = METHOD::ISOSURFACE;
@@ -320,7 +320,7 @@ void generate_combo(map<string, METHOD> &methods, vector<string> &filenames, vec
     sort(filenames.begin(), filenames.end());
 
     // generate color_combo
-    color_combo = vector<string>{ "Red", "Green", "Blue" };
+    // color_combo = vector<string>{ "Red", "Green", "Blue" };
 }
 
 double gaussian(double mu, double sigma, double value)
@@ -352,6 +352,7 @@ double gaussian_2d(glm::vec2 mu, glm::vec2 sigma, glm::vec2 value)
 
 void WindowManagement::gui()
 {
+    static bool volume_loaded = false;
     static Volume volume;
 
     static METHOD current_method = METHOD::NONE;
@@ -365,8 +366,7 @@ void WindowManagement::gui()
     static string filename = "engine";
     static vector<string> filenames;
 
-    static string current_color = "Red";
-    static vector<string> color_combo;
+    static int current_color = 0;
 
     static float clip_normal[] = { 0.0, 0.0, 0.0 }, clip_distance = 1.0;
 
@@ -377,7 +377,7 @@ void WindowManagement::gui()
     static vector<vector<float>> alpha(256, vector<float>(size, 0.0));
 
     if (first_time) {
-        generate_combo(methods, filenames, color_combo);
+        generate_combo(methods, filenames);
         first_time = false;
     }
 
@@ -412,10 +412,12 @@ void WindowManagement::gui()
 
     if (ImGui::Button("Load")) {
         volume = this->load_volume(filename, histogram, distribution);
+
+        volume_loaded = true;
     }
 
     ImGui::SameLine();
-    if (ImGui::Button("Show")) {
+    if (ImGui::Button("Show") && volume_loaded) {
         this->save_transfer_table(filename, color, alpha);
 
         current_method = methods[method];
@@ -424,12 +426,24 @@ void WindowManagement::gui()
 
     ImGui::SameLine();
     if (ImGui::Button("Clean")) {
+        static int clean_times = 0;
+
         current_method = METHOD::NONE;
 
         if (this->mesh.size() != 0) {
             this->mesh.clear();
+
+            clean_times = 1;
         }
         else {
+            if (clean_times == 2) {
+                histogram.clear();
+                distribution.clear();
+
+                volume_loaded = false;
+                clean_times = 0;
+            }
+
             for (size_t i = 0; i < color.size(); i++) {
                 fill(color[i].begin(), color[i].end(), 0.0);
             }
@@ -437,18 +451,16 @@ void WindowManagement::gui()
             for (size_t i = 0; i < alpha.size(); i++) {
                 fill(alpha[i].begin(), alpha[i].end(), 0.0);
             }
+
+            clean_times = 2;
         }
     }
-
-    if (ImGui::BeginCombo("## RGB Selector", current_color.c_str())) {
-        for (size_t i = 0; i < color_combo.size(); i++) {
-            bool selected = (current_color == color_combo[i]);
-
-            if (ImGui::Selectable(color_combo[i].c_str(), selected)) current_color = color_combo[i];
-            if (selected) ImGui::SetItemDefaultFocus();
-        }
-        ImGui::EndCombo();
-    }
+    // select color
+    ImGui::RadioButton("Red", &current_color, 0);
+    ImGui::SameLine();
+    ImGui::RadioButton("Green", &current_color, 1);
+    ImGui::SameLine();
+    ImGui::RadioButton("Blue", &current_color, 2);
 
     ImGui::SetWindowFontScale(1.0);
     ImGui::SliderFloat3("Clip Plane Normal", clip_normal, -1.0, 1.0);
@@ -457,7 +469,6 @@ void WindowManagement::gui()
     ImGui::End();
 
     if (histogram.size() != 0) {
-        int color_index = find(color_combo.begin(), color_combo.end(), current_color) - color_combo.begin();
         float max_amount = *max_element(histogram.begin(), histogram.end()) + 10;
 
         ImVec2 plot_size(-1, 0);
@@ -479,8 +490,8 @@ void WindowManagement::gui()
                 ImPlotPoint point = ImPlot::GetPlotMousePos();
 
                 for (auto i = 0; i < 256; i++) {
-                    color[color_index][i] += gaussian(point.x, 10.0, i);
-                    color[color_index][i] = min(1.0f, color[color_index][i]);
+                    color[current_color][i] += gaussian(point.x, 10.0, i);
+                    color[current_color][i] = min(1.0f, color[current_color][i]);
                 }
             }
 
@@ -488,8 +499,8 @@ void WindowManagement::gui()
                 ImPlotPoint point = ImPlot::GetPlotMousePos();
 
                 for (auto i = 0; i < 256; i++) {
-                    color[color_index][i] -= gaussian(point.x, 5.0, i);
-                    color[color_index][i] = max(0.0f, color[color_index][i]);
+                    color[current_color][i] -= gaussian(point.x, 5.0, i);
+                    color[current_color][i] = max(0.0f, color[current_color][i]);
                 }
             }
 
