@@ -5,7 +5,7 @@ in float slice_check;
 
 out vec4 fragment_color;
 
-layout (binding = 0) uniform sampler1D texture_1d;
+layout (binding = 0) uniform sampler2D texture_2d;
 layout (binding = 1) uniform sampler3D texture_3d;
 uniform vec3 view_pos;
 uniform vec3 light_pos;
@@ -20,7 +20,11 @@ void main()
     float value = hold.w;
     vec3 normal = normalize(hold.xyz);
 
-    vec4 object_color = texture(texture_1d, value);
+    float magnitude = length(hold.xyz);
+    magnitude = min(max(1.0, magnitude), 256.0);
+    magnitude = 20 * log2(magnitude);
+
+    vec4 object_color = texture(texture_2d, vec2(magnitude, value));
 
     vec3 view_direction = normalize(fragment_pos - view_pos);
 

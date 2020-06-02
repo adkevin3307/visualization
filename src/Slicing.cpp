@@ -2,6 +2,9 @@
 
 #include "constant.h"
 
+#include <iostream>
+#include <fstream>
+
 using namespace std;
 
 Slicing::Slicing()
@@ -57,6 +60,7 @@ void Slicing::init()
     };
 
     this->generate_texture_1d();
+    this->generate_texture_2d();
     this->generate_texture_3d();
 
     this->_vertex.resize(6);
@@ -82,6 +86,34 @@ void Slicing::generate_texture_1d()
         this->_texture_1d[i + 2] = 0.0;
         this->_texture_1d[i + 3] = 0.1387;
     }
+
+    this->_texture_1d_shape = glm::ivec3((limit_value.y - limit_value.x + 1), 0, 0);
+}
+
+void Slicing::generate_texture_2d()
+{
+    int x, y;
+    string temp;
+
+    fstream file;
+    file.open("transfer_function.txt", ios::in);
+
+    file >> temp;
+    file >> x >> y;
+    this->_texture_2d.resize(x * y * 4);
+
+    for (auto i = 0; i < x; i++) {
+        for (auto j = 0; j < y; j += 4) {
+            int index = (i * y + j) * 4;
+            for (auto delta = 0; delta < 4; delta++) {
+                file >> this->_texture_2d[index + delta];
+            }
+        }
+    }
+
+    file.close();
+
+    this->_texture_2d_shape = glm::ivec3(x, y, 0);
 }
 
 void Slicing::generate_texture_3d()
@@ -106,6 +138,8 @@ void Slicing::generate_texture_3d()
             }
         }
     }
+
+    this->_texture_3d_shape = glm::ivec3(shape.x, shape.y, shape.z);
 }
 
 void Slicing::push(glm::vec3 data, int index)
@@ -176,6 +210,11 @@ vector<float>& Slicing::texture_1d()
     return this->_texture_1d;
 }
 
+vector<float>& Slicing::texture_2d()
+{
+    return this->_texture_2d;
+}
+
 vector<float>& Slicing::texture_3d()
 {
     return this->_texture_3d;
@@ -183,12 +222,17 @@ vector<float>& Slicing::texture_3d()
 
 glm::ivec3 Slicing::texture_1d_shape()
 {
-    return glm::ivec3(this->_texture_1d.size() / 4, 0, 0);
+    return this->_texture_1d_shape;
+}
+
+glm::ivec3 Slicing::texture_2d_shape()
+{
+    return this->_texture_2d_shape;
 }
 
 glm::ivec3 Slicing::texture_3d_shape()
 {
-    return super::volume.shape();
+    return this->_texture_3d_shape;
 }
 
 vector<GLfloat>& Slicing::vertex()

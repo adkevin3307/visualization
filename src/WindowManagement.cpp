@@ -1,7 +1,5 @@
 #include "WindowManagement.h"
 
-#define _USE_MATH_DEFINES
-
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -15,6 +13,7 @@
 #include <stdexcept>
 #include <dirent.h>
 #include <cmath>
+#include <fstream>
 
 #include "Method.h"
 #include "IsoSurface.h"
@@ -134,6 +133,9 @@ void WindowManagement::key_callback(GLFWwindow *window, int key, int scancode, i
         case GLFW_KEY_SPACE:
             this->camera.reset();
             break;
+        case GLFW_KEY_LEFT_CONTROL: case GLFW_KEY_RIGHT_CONTROL:
+            ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+            break;
         default:
             break;
     }
@@ -204,16 +206,50 @@ Volume WindowManagement::load_volume(string filename, vector<float> &histogram, 
     histogram = volume.histogram();
     distribution = volume.distribution(256.0);
 
+    for (size_t i = 0; i < distribution.size(); i++) {
+        for (size_t j = 0; j < distribution[i].size(); j++) {
+            distribution[i][j] = 20 * log2(distribution[i][j]);
+        }
+    }
+
     return volume;
+}
+
+void WindowManagement::save_transfer_table(string filename, vector<vector<float>> &color, vector<vector<float>> &alpha)
+{
+    cout << "==================== Save ====================" << '\n';
+
+    fstream file;
+    file.open("transfer_function.txt", ios::trunc | ios::out);
+
+    cout << "filename: " << filename << '\n';
+    file << filename << '\n';
+
+    cout << "table size: " << alpha.size() << ", " << alpha[0].size() << '\n';
+    file << alpha.size() << ' ' << alpha[0].size() << '\n';
+    for (size_t i = 0; i < alpha.size(); i++) {
+        for (size_t j = 0; j < alpha[i].size(); j++) {
+            file << color[0][i] << ' ' << color[1][i] << ' ' << color[2][i] << ' ';
+            file << alpha[i][j] << (j == alpha[i].size() - 1 ? '\n' : ' ');
+        }
+    }
+
+    file.close();
+
+    cout << "==============================================" << '\n';
 }
 
 void WindowManagement::load(Volume &volume, METHOD method, bool update)
 {
+    if (update == false) cout << "==================== Load ====================" << '\n';
+
     this->shader_map[method].use();
 
     try {
         switch (method) {
             case (METHOD::ISOSURFACE): {
+                cout << "Method: " << "Iso Surface" << '\n';
+
                 IsoSurface iso_surface(volume);
                 iso_surface.run();
 
@@ -228,15 +264,17 @@ void WindowManagement::load(Volume &volume, METHOD method, bool update)
                 static Slicing slicing;
 
                 if (update == false) {
+                    cout << "Method: " << "Slicing Method" << '\n';
+
                     slicing = Slicing(volume);
                     slicing.run(this->camera.position());
 
                     Mesh temp_mesh(slicing, METHOD::SLICING);
                     temp_mesh.enable_texture(2);
                     temp_mesh.init();
-                    temp_mesh.init_texture(GL_TEXTURE_1D, 0);
+                    temp_mesh.init_texture(GL_TEXTURE_2D, 0);
                     temp_mesh.init_texture(GL_TEXTURE_3D, 1);
-                    temp_mesh.set_texture(0, slicing.texture_1d(), slicing.texture_1d_shape());
+                    temp_mesh.set_texture(0, slicing.texture_2d(), slicing.texture_2d_shape());
                     temp_mesh.set_texture(1, slicing.texture_3d(), slicing.texture_3d_shape());
 
                     this->mesh.push_back(temp_mesh);
@@ -256,9 +294,11 @@ void WindowManagement::load(Volume &volume, METHOD method, bool update)
     catch (const runtime_error &error) {
         cerr << error.what() << '\n';
     }
+
+    if (update == false) cout << "==============================================" << '\n';
 }
 
-void generate_combo(map<string, METHOD> &methods, vector<string> &filenames)
+void generate_combo(map<string, METHOD> &methods, vector<string> &filenames, vector<string> &color_combo)
 {
     // generate methods combo
     methods["Iso Surface"] = METHOD::ISOSURFACE;
@@ -278,10 +318,15 @@ void generate_combo(map<string, METHOD> &methods, vector<string> &filenames)
     }
 
     sort(filenames.begin(), filenames.end());
+
+    // generate color_combo
+    color_combo = vector<string>{ "Red", "Green", "Blue" };
 }
 
 double gaussian(double mu, double sigma, double value)
 {
+    if (sigma == 0.0) return 0.0;
+
     // double coefficient = sigma * sqrt(2 * M_PI);
     double result = exp(-1 * (value - mu) * (value - mu) / (2 * sigma * sigma));
 
@@ -291,7 +336,9 @@ double gaussian(double mu, double sigma, double value)
 
 double gaussian_2d(glm::vec2 mu, glm::vec2 sigma, glm::vec2 value)
 {
-    double coefficient = sqrt(sigma.x + sigma.y);
+    if (sigma.x == 0.0 && sigma.y == 0.0) return 0.0;
+
+    double coefficient = sqrt(sigma.x * sigma.y);
 
     double temp[2];
     for (auto i = 0; i < 2; i++) {
@@ -300,13 +347,12 @@ double gaussian_2d(glm::vec2 mu, glm::vec2 sigma, glm::vec2 value)
 
     double result = exp(-1 * (temp[0] + temp[1]));
 
-    return result / coefficient;
+    return min(result / coefficient, 1.0);
 }
 
 void WindowManagement::gui()
 {
     static Volume volume;
-    static bool volume_loaded = false;
 
     static METHOD current_method = METHOD::NONE;
     static bool first_time = true;
@@ -319,21 +365,21 @@ void WindowManagement::gui()
     static string filename = "engine";
     static vector<string> filenames;
 
+    static string current_color = "Red";
+    static vector<string> color_combo;
+
     static float clip_normal[] = { 0.0, 0.0, 0.0 }, clip_distance = 1.0;
 
     static vector<float> histogram;
     static vector<vector<float>> distribution;
 
-    static float red_parameter[2] = { 0.0, 0.0 }; // mu, sigma
-    static float green_parameter[2] = { 0.0, 0.0 }; // mu, sigma
-    static float blue_parameter[2] = { 0.0, 0.0 }; // mu, sigma
-    // static float alpha_parameter[4] = { 0.0, 0.0, 0.0, 0.0 }; // mu_x, mu_y, sigma_x, sigma_y
+    static vector<vector<float>> color(3, vector<float>(256, 0.0));
+    static vector<vector<float>> alpha(256, vector<float>(size, 0.0));
 
-    static vector<float> red(256, 0.0), green(256, 0.0), blue(256, 0.0);
-    // static vector<vector<float>> alpha(256, vector<float>(size, 0.0));
-
-    if (first_time) generate_combo(methods, filenames);
-    first_time = false;
+    if (first_time) {
+        generate_combo(methods, filenames, color_combo);
+        first_time = false;
+    }
 
     // set Controller position and size
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Once);
@@ -364,13 +410,14 @@ void WindowManagement::gui()
         ImGui::EndCombo();
     }
 
-    if (ImGui::Button("Information")) {
-        volume_loaded = true;
+    if (ImGui::Button("Load")) {
         volume = this->load_volume(filename, histogram, distribution);
     }
 
     ImGui::SameLine();
-    if (volume_loaded && ImGui::Button("Load")) {
+    if (ImGui::Button("Show")) {
+        this->save_transfer_table(filename, color, alpha);
+
         current_method = methods[method];
         this->load(volume, methods[method], false);
     }
@@ -379,46 +426,42 @@ void WindowManagement::gui()
     if (ImGui::Button("Clean")) {
         current_method = METHOD::NONE;
 
-        volume_loaded = false;
+        if (this->mesh.size() != 0) {
+            this->mesh.clear();
+        }
+        else {
+            for (size_t i = 0; i < color.size(); i++) {
+                fill(color[i].begin(), color[i].end(), 0.0);
+            }
 
-        this->mesh.clear();
-        histogram.clear();
-        distribution.clear();
+            for (size_t i = 0; i < alpha.size(); i++) {
+                fill(alpha[i].begin(), alpha[i].end(), 0.0);
+            }
+        }
+    }
+
+    if (ImGui::BeginCombo("## RGB Selector", current_color.c_str())) {
+        for (size_t i = 0; i < color_combo.size(); i++) {
+            bool selected = (current_color == color_combo[i]);
+
+            if (ImGui::Selectable(color_combo[i].c_str(), selected)) current_color = color_combo[i];
+            if (selected) ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
     }
 
     ImGui::SetWindowFontScale(1.0);
     ImGui::SliderFloat3("Clip Plane Normal", clip_normal, -1.0, 1.0);
     ImGui::SliderFloat("Clip Plane Distanse", &clip_distance, -150.0, 150.0);
 
-    ImGui::SliderFloat2("Red Color", red_parameter, 0.0, 255.0);
-    ImGui::SliderFloat2("Green Color", green_parameter, 0.0, 255.0);
-    ImGui::SliderFloat2("Blue Color", blue_parameter, 0.0, 255.0);
-
-    // ImGui::SliderFloat("Alpha Center X", alpha_parameter + 0, 0.0, 255.0);
-    // ImGui::SliderFloat("Alpha Center Y", alpha_parameter + 1, 0.0, size);
-    // ImGui::SliderFloat("Alpha Sigma X", alpha_parameter + 2, 0.0, 255.0);
-    // ImGui::SliderFloat("Alpha Sigma Y", alpha_parameter + 3, 0.0, size);
-
     ImGui::End();
 
     if (histogram.size() != 0) {
-        for (auto i = 0; i < 256; i++) {
-            red[i] = gaussian(red_parameter[0], red_parameter[1], i);
-            green[i] = gaussian(green_parameter[0], green_parameter[1], i);
-            blue[i] = gaussian(blue_parameter[0], blue_parameter[1], i);
-        }
-
-        // for (size_t i = 0; i < alpha.size(); i++) {
-        //     for (size_t j = 0; j < alpha[i].size(); j++) {
-        //         alpha[i][j] = gaussian_2d(
-        //             glm::vec2(alpha_parameter[0], alpha_parameter[1]),
-        //             glm::vec2(alpha_parameter[2], alpha_parameter[3]),
-        //             glm::vec2(i, j)
-        //         );
-        //     }
-        // }
-
+        int color_index = find(color_combo.begin(), color_combo.end(), current_color) - color_combo.begin();
         float max_amount = *max_element(histogram.begin(), histogram.end()) + 10;
+
+        ImVec2 plot_size(-1, 0);
+        ImPlotFlags plot_flag = ImPlotFlags_MousePos | ImPlotFlags_Legend | ImPlotFlags_Highlight | ImPlotFlags_CullData;
 
         // set Information position and size
         ImGui::SetNextWindowPos(ImVec2(WIDTH - (WIDTH / 3) - 10, 10), ImGuiCond_Once);
@@ -427,46 +470,90 @@ void WindowManagement::gui()
         ImGui::Begin("Information");
         // histogram
         ImPlot::SetNextPlotLimits(0.0, 256.0, 0.0, max_amount, ImGuiCond_Always);
-        ImPlot::SetNextPlotLimitsY(0.0, 1.0, ImGuiCond_Always, 1);
-        if (ImPlot::BeginPlot("## RGB", "Intensity", "Amount")) {
+        ImPlot::SetNextPlotLimitsY(0.0, 1.1, ImGuiCond_Always, 1);
+        if (ImPlot::BeginPlot("## RGB", "Intensity", "Amount", plot_size, plot_flag)) {
             ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(128, 128, 128, 255));
             ImPlot::PlotBars(filename.c_str(), histogram.data(), histogram.size());
 
+            if (ImPlot::IsPlotHovered() && ImGui::IsMouseClicked(0)) {
+                ImPlotPoint point = ImPlot::GetPlotMousePos();
+
+                for (auto i = 0; i < 256; i++) {
+                    color[color_index][i] += gaussian(point.x, 10.0, i);
+                    color[color_index][i] = min(1.0f, color[color_index][i]);
+                }
+            }
+
+            if (ImPlot::IsPlotHovered() && ImGui::IsMouseClicked(1)) {
+                ImPlotPoint point = ImPlot::GetPlotMousePos();
+
+                for (auto i = 0; i < 256; i++) {
+                    color[color_index][i] -= gaussian(point.x, 5.0, i);
+                    color[color_index][i] = max(0.0f, color[color_index][i]);
+                }
+            }
+
             ImPlot::SetPlotYAxis(1);
             ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(255, 0, 0, 255));
-            ImPlot::PlotLine("Red", red.data(), red.size());
+            ImPlot::PlotLine("Red", color[0].data(), color[0].size());
             ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(0, 255, 0, 255));
-            ImPlot::PlotLine("Green", green.data(), green.size());
+            ImPlot::PlotLine("Green", color[1].data(), color[1].size());
             ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(0, 0, 255, 255));
-            ImPlot::PlotLine("Blue", blue.data(), blue.size());
+            ImPlot::PlotLine("Blue", color[2].data(), color[2].size());
 
             ImPlot::EndPlot();
         }
         ImPlot::PopStyleColor(4);
         // distribution
         ImPlot::SetNextPlotLimits(0.0, 256.0, 0.0, size, ImGuiCond_Always);
-        if (ImPlot::BeginPlot("Distribution", "Intensity", "Gradient Magnitude")) {
+        if (ImPlot::BeginPlot("Distribution", "Intensity", "Gradient Magnitude", plot_size, plot_flag)) {
+            if (ImGui::IsWindowFocused() && ImGui::IsMouseDown(0)) {
+                ImPlotPoint point = ImPlot::GetPlotMousePos();
+
+                for (size_t i = 0; i < alpha.size(); i++) {
+                    for (size_t j = 0; j < alpha[i].size(); j++) {
+                        alpha[i][j] += gaussian_2d(
+                            glm::vec2(point.x, point.y),
+                            glm::vec2(10.0, 10.0),
+                            glm::vec2(i, j)
+                        );
+                        alpha[i][j] = min(1.0f, alpha[i][j]);
+                    }
+                }
+            }
+
+            if (ImGui::IsWindowFocused() && ImGui::IsMouseDown(1)) {
+                ImPlotPoint point = ImPlot::GetPlotMousePos();
+
+                for (size_t i = 0; i < alpha.size(); i++) {
+                    for (size_t j = 0; j < alpha[i].size(); j++) {
+                        alpha[i][j] -= gaussian_2d(
+                            glm::vec2(point.x, point.y),
+                            glm::vec2(10.0, 10.0),
+                            glm::vec2(i, j)
+                        );
+                        alpha[i][j] = max(0.0f, alpha[i][j]);
+                    }
+                }
+            }
+
             for (size_t i = 0; i < distribution.size(); i++) {
                 for (size_t j = 0; j < distribution[i].size(); j++) {
                     ImVec2 rmin = ImPlot::PlotToPixels(ImPlotPoint(i, j + 1));
                     ImVec2 rmax = ImPlot::PlotToPixels(ImPlotPoint(i + 1, j));
 
-                    ImGui::GetWindowDrawList()->AddRectFilled(
-                        rmin,
-                        rmax,
-                        IM_COL32(distribution[i][j], distribution[i][j], distribution[i][j], 255)
-                    );
+                    float gray = min(255.0f, distribution[i][j]);
 
-                    // if (alpha[i][j] != 0.0) {
-                    //     int alpha_value = min(255, (int)(alpha[i][j] * 10 * 255));
-                    //     ImGui::GetWindowDrawList()->AddRectFilled(
-                    //         rmin,
-                    //         rmax,
-                    //         IM_COL32(255, 0, 0, alpha_value)
-                    //     );
-                    // }
+                    ImGui::GetWindowDrawList()->AddRectFilled(rmin, rmax, IM_COL32(gray, gray, gray, 255));
+
+                    if (alpha[i][j] > EPSILON) {
+                        int alpha_value = alpha[i][j] * 255;
+
+                        ImGui::GetWindowDrawList()->AddRectFilled(rmin, rmax, IM_COL32(137, 207, 240, alpha_value));
+                    }
                 }
             }
+
             ImPlot::EndPlot();
         }
         ImGui::End();
@@ -537,10 +624,12 @@ void WindowManagement::init()
 
     this->shader_map[METHOD::ISOSURFACE] = Shader(
         "./src/shader/iso_surface/vertex.glsl",
-        "./src/shader/iso_surface/fragment.glsl");
+        "./src/shader/iso_surface/fragment.glsl"
+    );
     this->shader_map[METHOD::SLICING] = Shader(
         "./src/shader/slicing/vertex.glsl",
-        "./src/shader/slicing/fragment.glsl");
+        "./src/shader/slicing/fragment.glsl"
+    );
 }
 
 void WindowManagement::main_loop()

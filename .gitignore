@@ -4,3 +4,4 @@ test.*
 *.exe
 *.out
 imgui.ini
+transfer_function.txt
