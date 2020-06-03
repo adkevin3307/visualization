@@ -29,7 +29,7 @@ Mesh::Mesh(Method &render_method, METHOD method) : Mesh::Mesh()
     if (this->stride == 0) this->stride = 1;
 }
 
-Mesh::Mesh(vector<GLfloat> &vertex, vector<int> attribute, GLenum render_mode, glm::vec3 shape, METHOD method) : Mesh::Mesh()
+Mesh::Mesh(vector<GLfloat> &vertex, vector<int> &&attribute, GLenum render_mode, glm::vec3 shape, METHOD method) : Mesh::Mesh()
 {
     this->vertex = vertex;
     this->attribute = attribute;

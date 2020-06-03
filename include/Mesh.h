@@ -28,7 +28,7 @@ private:
 public:
     Mesh();
     Mesh(Method &render_method, METHOD method);
-    Mesh(vector<GLfloat> &vertex, vector<int> attribute, GLenum render_mode, glm::vec3 shape, METHOD method);
+    Mesh(vector<GLfloat> &vertex, vector<int> &&attribute, GLenum render_mode, glm::vec3 shape, METHOD method);
     ~Mesh();
 
     METHOD method();

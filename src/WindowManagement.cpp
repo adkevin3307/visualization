@@ -204,7 +204,7 @@ Volume WindowManagement::load_volume(string filename, vector<float> &histogram, 
     cout << "==============================================" << '\n';
 
     histogram = volume.histogram();
-    distribution = volume.distribution(256.0);
+    distribution = volume.distribution(MAX_GRADIENT_MAGINATE);
 
     for (size_t i = 0; i < distribution.size(); i++) {
         for (size_t j = 0; j < distribution[i].size(); j++) {
@@ -352,13 +352,12 @@ double gaussian_2d(glm::vec2 mu, glm::vec2 sigma, glm::vec2 value)
 
 void WindowManagement::gui()
 {
-    static bool volume_loaded = false;
     static Volume volume;
 
     static METHOD current_method = METHOD::NONE;
     static bool first_time = true;
 
-    static double size = 20.0 * log2(256.0) + 1.0;
+    static double size = 20.0 * log2(MAX_GRADIENT_MAGINATE) + 1.0;
 
     static string method = "Iso Surface";
     static map<string, METHOD> methods;
@@ -412,12 +411,10 @@ void WindowManagement::gui()
 
     if (ImGui::Button("Load")) {
         volume = this->load_volume(filename, histogram, distribution);
-
-        volume_loaded = true;
     }
 
     ImGui::SameLine();
-    if (ImGui::Button("Show") && volume_loaded) {
+    if (ImGui::Button("Show")) {
         this->save_transfer_table(filename, color, alpha);
 
         current_method = methods[method];
@@ -426,24 +423,12 @@ void WindowManagement::gui()
 
     ImGui::SameLine();
     if (ImGui::Button("Clean")) {
-        static int clean_times = 0;
-
         current_method = METHOD::NONE;
 
         if (this->mesh.size() != 0) {
             this->mesh.clear();
-
-            clean_times = 1;
         }
         else {
-            if (clean_times == 2) {
-                histogram.clear();
-                distribution.clear();
-
-                volume_loaded = false;
-                clean_times = 0;
-            }
-
             for (size_t i = 0; i < color.size(); i++) {
                 fill(color[i].begin(), color[i].end(), 0.0);
             }
@@ -451,8 +436,6 @@ void WindowManagement::gui()
             for (size_t i = 0; i < alpha.size(); i++) {
                 fill(alpha[i].begin(), alpha[i].end(), 0.0);
             }
-
-            clean_times = 2;
         }
     }
     // select color

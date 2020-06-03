@@ -41,6 +41,8 @@ const static double EPSILON = 1e-6;
 const static int WIDTH = 1440;
 const static int HEIGHT = 900;
 
+const static float MAX_GRADIENT_MAGINATE = 256.0;
+
 const static int edgeTable[256] = {
 	0x0, 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
 	0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00,
