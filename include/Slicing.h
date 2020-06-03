@@ -41,6 +41,7 @@ public:
 	glm::ivec3 texture_2d_shape();
 	glm::ivec3 texture_3d_shape();
 
+	glm::vec3 shape() override;
 	vector<GLfloat>& vertex() override;
 	vector<int> attribute() override;
 	GLenum render_mode() override;

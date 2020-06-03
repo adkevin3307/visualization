@@ -152,7 +152,7 @@ void Slicing::push(glm::vec3 data, int index)
 void Slicing::calculate()
 {
     glm::ivec3 shape = super::volume.shape();
-    glm::vec3 plane_position = super::volume_shape();
+    glm::vec3 plane_position = glm::vec3(super::volume.shape()) * super::volume.voxel_size();
 
     double range = 0.5;
 
@@ -233,6 +233,11 @@ glm::ivec3 Slicing::texture_2d_shape()
 glm::ivec3 Slicing::texture_3d_shape()
 {
     return this->_texture_3d_shape;
+}
+
+glm::vec3 Slicing::shape()
+{
+    return glm::vec3(super::volume.shape()) * super::volume.voxel_size();
 }
 
 vector<GLfloat>& Slicing::vertex()

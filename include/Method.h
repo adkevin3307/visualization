@@ -19,8 +19,7 @@ public:
     Method(Volume &volume);
     virtual ~Method();
 
-    glm::vec3 volume_shape();
-
+    virtual glm::vec3 shape() = 0;
     virtual vector<GLfloat>& vertex() = 0;
     virtual vector<int> attribute() = 0;
     virtual GLenum render_mode() = 0;

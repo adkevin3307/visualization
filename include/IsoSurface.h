@@ -27,6 +27,8 @@ public:
 	~IsoSurface();
 
 	void run();
+
+	glm::vec3 shape() override;
 	vector<GLfloat>& vertex() override;
 	vector<int> attribute() override;
 	GLenum render_mode() override;

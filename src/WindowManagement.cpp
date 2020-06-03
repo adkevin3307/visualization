@@ -18,6 +18,7 @@
 #include "Method.h"
 #include "IsoSurface.h"
 #include "Slicing.h"
+#include "StreamLine.h"
 #include "Transformation.h"
 
 using namespace std;
@@ -287,6 +288,19 @@ void WindowManagement::load(Volume &volume, METHOD method, bool update)
 
                 break;
             }
+            case (METHOD::STREAMLINE): {
+                cout << "Method: " << "Stream Line" << '\n';
+
+                StreamLine stream_line("./Data/Vector/1.vec");
+                stream_line.run();
+
+                Mesh temp_mesh(stream_line, METHOD::STREAMLINE);
+                temp_mesh.init();
+
+                this->mesh.push_back(temp_mesh);
+
+                break;
+            }
             default:
                 break;
         }
@@ -298,13 +312,14 @@ void WindowManagement::load(Volume &volume, METHOD method, bool update)
     if (update == false) cout << "==============================================" << '\n';
 }
 
-void generate_combo(map<string, METHOD> &methods, vector<string> &filenames)
+void generate_combo(map<string, METHOD> &methods, vector<string> &scalar_files, vector<string> &vector_files)
 {
     // generate methods combo
     methods["Iso Surface"] = METHOD::ISOSURFACE;
     methods["Slicing"] = METHOD::SLICING;
+    methods["Stream Line"] = METHOD::STREAMLINE;
 
-    // generate filenames combo
+    // generate scalar files combo
     DIR *dp;
     dirent *dirp;
 
@@ -313,14 +328,20 @@ void generate_combo(map<string, METHOD> &methods, vector<string> &filenames)
             string temp = dirp->d_name;
             size_t index = temp.find(".inf");
 
-            if (index != string::npos) filenames.push_back(temp.substr(0, index));
+            if (index != string::npos) scalar_files.push_back(temp.substr(0, index));
         }
     }
 
-    sort(filenames.begin(), filenames.end());
+    sort(scalar_files.begin(), scalar_files.end());
 
-    // generate color_combo
-    // color_combo = vector<string>{ "Red", "Green", "Blue" };
+    // generate vector files combo
+    if ((dp = opendir("./Data/Vector")) != NULL) {
+        while ((dirp = readdir(dp)) != NULL) {
+            string temp = dirp->d_name;
+
+            if (temp.find("vec") != string::npos) vector_files.push_back(temp);
+        }
+    }
 }
 
 double gaussian(double mu, double sigma, double value)
@@ -362,8 +383,11 @@ void WindowManagement::gui()
     static string method = "Iso Surface";
     static map<string, METHOD> methods;
 
-    static string filename = "engine";
-    static vector<string> filenames;
+    static string scalar_file = "engine";
+    static vector<string> scalar_files;
+
+    static string vector_file = "1.vec";
+    static vector<string> vector_files;
 
     static int current_color = 0;
 
@@ -376,7 +400,7 @@ void WindowManagement::gui()
     static vector<vector<float>> alpha(256, vector<float>(size, 0.0));
 
     if (first_time) {
-        generate_combo(methods, filenames);
+        generate_combo(methods, scalar_files, vector_files);
         first_time = false;
     }
 
@@ -399,29 +423,46 @@ void WindowManagement::gui()
         ImGui::EndCombo();
     }
 
-    if (ImGui::BeginCombo("## Filename", filename.c_str())) {
-        for (size_t i = 0; i < filenames.size(); i++) {
-            bool selected = (filename == filenames[i]);
+    if (method == "Iso Surface" || method == "Slicing") {
+        if (ImGui::BeginCombo("## Scalar Files", scalar_file.c_str())) {
+            for (size_t i = 0; i < scalar_files.size(); i++) {
+                bool selected = (scalar_file == scalar_files[i]);
 
-            if (ImGui::Selectable(filenames[i].c_str(), selected)) filename = filenames[i];
-            if (selected) ImGui::SetItemDefaultFocus();
+                if (ImGui::Selectable(scalar_files[i].c_str(), selected)) scalar_file = scalar_files[i];
+                if (selected) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
         }
-        ImGui::EndCombo();
+    }
+    else if (method == "Stream Line") {
+        if (ImGui::BeginCombo("## Vector Files", vector_file.c_str())) {
+            for (size_t i = 0; i < vector_files.size(); i++) {
+                bool selected = (vector_file == vector_files[i]);
+
+                if (ImGui::Selectable(vector_files[i].c_str(), selected)) vector_file = vector_files[i];
+                if (selected) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
     }
 
-    if (ImGui::Button("Load")) {
-        volume = this->load_volume(filename, histogram, distribution);
+    if (method != "Stream Line") {
+        if (ImGui::Button("Load")) {
+            volume = this->load_volume(scalar_file, histogram, distribution);
+        }
+        ImGui::SameLine();
     }
 
-    ImGui::SameLine();
     if (ImGui::Button("Show")) {
-        this->save_transfer_table(filename, color, alpha);
+        if (method != "Stream Line") {
+            this->save_transfer_table(scalar_file, color, alpha);
+        }
 
         current_method = methods[method];
         this->load(volume, methods[method], false);
     }
-
     ImGui::SameLine();
+
     if (ImGui::Button("Clean")) {
         current_method = METHOD::NONE;
 
@@ -467,7 +508,7 @@ void WindowManagement::gui()
         ImPlot::SetNextPlotLimitsY(0.0, 1.1, ImGuiCond_Always, 1);
         if (ImPlot::BeginPlot("## RGB", "Intensity", "Amount", plot_size, plot_flag)) {
             ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(128, 128, 128, 255));
-            ImPlot::PlotBars(filename.c_str(), histogram.data(), histogram.size());
+            ImPlot::PlotBars(scalar_file.c_str(), histogram.data(), histogram.size());
 
             if (ImPlot::IsPlotHovered() && ImGui::IsMouseClicked(0)) {
                 ImPlotPoint point = ImPlot::GetPlotMousePos();
@@ -559,9 +600,12 @@ void WindowManagement::gui()
 
     if (current_method != METHOD::NONE) {
         this->shader_map[current_method].set_uniform("clip_plane", clip_plane);
-        this->shader_map[current_method].set_uniform("view_pos", this->camera.position());
-        this->shader_map[current_method].set_uniform("light_pos", this->camera.position());
-        this->shader_map[current_method].set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
+
+        if (current_method != METHOD::STREAMLINE) {
+            this->shader_map[current_method].set_uniform("view_pos", this->camera.position());
+            this->shader_map[current_method].set_uniform("light_pos", this->camera.position());
+            this->shader_map[current_method].set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
+        }
     }
 
     if (current_method == METHOD::SLICING) {
@@ -624,6 +668,10 @@ void WindowManagement::init()
         "./src/shader/slicing/vertex.glsl",
         "./src/shader/slicing/fragment.glsl"
     );
+    this->shader_map[METHOD::STREAMLINE] = Shader(
+        "./src/shader/stream_line/vertex.glsl",
+        "./src/shader/stream_line/fragment.glsl"
+    );
 }
 
 void WindowManagement::main_loop()
@@ -647,8 +695,8 @@ void WindowManagement::main_loop()
             this->mesh[i].transform(transformation);
             transformation.set();
 
-            if (this->mesh[i].method() == METHOD::ISOSURFACE) {
-                this->shader_map[METHOD::ISOSURFACE].set_uniform("object_color", glm::vec4(0.41, 0.37, 0.89, 1.0));
+            if (this->mesh[i].method() == METHOD::ISOSURFACE || this->mesh[i].method() == METHOD::STREAMLINE) {
+                this->shader_map[this->mesh[i].method()].set_uniform("object_color", glm::vec4(0.41, 0.37, 0.89, 1.0));
             }
             this->mesh[i].draw(GL_FILL);
         }

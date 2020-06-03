@@ -33,7 +33,8 @@ enum TRANSFORMATION {
 enum METHOD {
 	NONE,
 	ISOSURFACE,
-	SLICING
+	SLICING,
+	STREAMLINE
 };
 
 const static double EPSILON = 1e-6;

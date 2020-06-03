@@ -105,6 +105,11 @@ void IsoSurface::run()
     }
 }
 
+glm::vec3 IsoSurface::shape()
+{
+    return glm::vec3(super::volume.shape()) * super::volume.voxel_size();
+}
+
 vector<GLfloat>& IsoSurface::vertex()
 {
     return this->_vertex;

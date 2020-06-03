@@ -21,7 +21,7 @@ Mesh::Mesh(Method &render_method, METHOD method) : Mesh::Mesh()
     this->vertex = render_method.vertex();
     this->attribute = render_method.attribute();
     this->render_mode = render_method.render_mode();
-    this->shape = render_method.volume_shape();
+    this->shape = render_method.shape();
 
     this->_method = method;
 
