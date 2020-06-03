@@ -194,7 +194,7 @@ void WindowManagement::set_callback()
     glfwSetScrollCallback(this->window, scrollCallback);
 }
 
-Volume WindowManagement::load_volume(string filename, vector<float> &histogram, vector<vector<float>> &distribution)
+void WindowManagement::load_volume(string filename, vector<float> &histogram, vector<vector<float>> &distribution)
 {
     string inf_file = "./Data/Scalar/" + filename + ".inf", raw_file = "./Data/Scalar/" + filename + ".raw";
 
@@ -212,8 +212,6 @@ Volume WindowManagement::load_volume(string filename, vector<float> &histogram, 
             distribution[i][j] = 20 * log2(distribution[i][j]);
         }
     }
-
-    return volume;
 }
 
 void WindowManagement::save_transfer_table(string filename, vector<vector<float>> &color, vector<vector<float>> &alpha)
@@ -240,8 +238,10 @@ void WindowManagement::save_transfer_table(string filename, vector<vector<float>
     cout << "==============================================" << '\n';
 }
 
-void WindowManagement::load(Volume &volume, METHOD method, bool update)
+void WindowManagement::load(string filename, METHOD method, bool update)
 {
+    string base = "./Data/";
+
     if (update == false) cout << "==================== Load ====================" << '\n';
 
     this->shader_map[method].use();
@@ -251,7 +251,9 @@ void WindowManagement::load(Volume &volume, METHOD method, bool update)
             case (METHOD::ISOSURFACE): {
                 cout << "Method: " << "Iso Surface" << '\n';
 
-                IsoSurface iso_surface(volume);
+                filename = base + "Scalar/" + filename;
+
+                IsoSurface iso_surface(filename + ".inf", filename + ".raw");
                 iso_surface.run();
 
                 Mesh temp_mesh(iso_surface, METHOD::ISOSURFACE);
@@ -267,7 +269,9 @@ void WindowManagement::load(Volume &volume, METHOD method, bool update)
                 if (update == false) {
                     cout << "Method: " << "Slicing Method" << '\n';
 
-                    slicing = Slicing(volume);
+                    filename = base + "Scalar/" + filename;
+
+                    slicing = Slicing(filename + ".inf", filename + ".raw");
                     slicing.run(this->camera.position());
 
                     Mesh temp_mesh(slicing, METHOD::SLICING);
@@ -291,7 +295,9 @@ void WindowManagement::load(Volume &volume, METHOD method, bool update)
             case (METHOD::STREAMLINE): {
                 cout << "Method: " << "Stream Line" << '\n';
 
-                StreamLine stream_line("./Data/Vector/1.vec");
+                filename = base + "Vector/" + filename;
+
+                StreamLine stream_line(filename);
                 stream_line.run();
 
                 Mesh temp_mesh(stream_line, METHOD::STREAMLINE);
@@ -448,7 +454,7 @@ void WindowManagement::gui()
 
     if (method != "Stream Line") {
         if (ImGui::Button("Load")) {
-            volume = this->load_volume(scalar_file, histogram, distribution);
+            this->load_volume(scalar_file, histogram, distribution);
         }
         ImGui::SameLine();
     }
@@ -459,7 +465,13 @@ void WindowManagement::gui()
         }
 
         current_method = methods[method];
-        this->load(volume, methods[method], false);
+        if (current_method == METHOD::ISOSURFACE || current_method == METHOD::SLICING) {
+            this->load(scalar_file, current_method, false);
+        }
+        else if (current_method == METHOD::STREAMLINE) {
+            this->load(vector_file, current_method, false);
+        }
+        
     }
     ImGui::SameLine();
 
@@ -491,6 +503,11 @@ void WindowManagement::gui()
     ImGui::SliderFloat("Clip Plane Distanse", &clip_distance, -150.0, 150.0);
 
     ImGui::End();
+
+    if (method == "Stream Line") {
+        histogram.clear();
+        distribution.clear();
+    }
 
     if (histogram.size() != 0) {
         float max_amount = *max_element(histogram.begin(), histogram.end()) + 10;
@@ -609,7 +626,7 @@ void WindowManagement::gui()
     }
 
     if (current_method == METHOD::SLICING) {
-        this->load(volume, methods[method], true);
+        this->load(scalar_file, current_method, true);
     }
 }
 

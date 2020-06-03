@@ -31,9 +31,9 @@ private:
 
     void set_callback();
 
-    Volume load_volume(string filename, vector<float> &histogram, vector<vector<float>> &distribution);
+    void load_volume(string filename, vector<float> &histogram, vector<vector<float>> &distribution);
     void save_transfer_table(string filename, vector<vector<float>> &color, vector<vector<float>> &alpha);
-    void load(Volume &volume, METHOD method, bool update);
+    void load(string filename, METHOD method, bool update);
     void gui();
 
 public:
