@@ -491,16 +491,18 @@ void WindowManagement::gui()
             }
         }
     }
-    // select color
-    ImGui::RadioButton("Red", &current_color, 0);
-    ImGui::SameLine();
-    ImGui::RadioButton("Green", &current_color, 1);
-    ImGui::SameLine();
-    ImGui::RadioButton("Blue", &current_color, 2);
+    if (method != "Stream Line") {
+        // select color
+        ImGui::RadioButton("Red", &current_color, 0);
+        ImGui::SameLine();
+        ImGui::RadioButton("Green", &current_color, 1);
+        ImGui::SameLine();
+        ImGui::RadioButton("Blue", &current_color, 2);
 
-    ImGui::SetWindowFontScale(1.0);
-    ImGui::SliderFloat3("Clip Plane Normal", clip_normal, -1.0, 1.0);
-    ImGui::SliderFloat("Clip Plane Distanse", &clip_distance, -150.0, 150.0);
+        ImGui::SetWindowFontScale(1.0);
+        ImGui::SliderFloat3("Clip Plane Normal", clip_normal, -1.0, 1.0);
+        ImGui::SliderFloat("Clip Plane Distanse", &clip_distance, -150.0, 150.0);
+    }
 
     ImGui::End();
 
@@ -611,14 +613,13 @@ void WindowManagement::gui()
         ImGui::End();
     }
 
-    glm::vec3 temp = glm::make_vec3(clip_normal);
-    if (glm::length(temp) > EPSILON) temp = glm::normalize(temp);
-    glm::vec4 clip_plane = glm::vec4(temp, clip_distance);
+    if (method != "Stream Line") {
+        glm::vec3 temp = glm::make_vec3(clip_normal);
+        if (glm::length(temp) > EPSILON) temp = glm::normalize(temp);
+        glm::vec4 clip_plane = glm::vec4(temp, clip_distance);
 
-    if (current_method != METHOD::NONE) {
-        this->shader_map[current_method].set_uniform("clip_plane", clip_plane);
-
-        if (current_method != METHOD::STREAMLINE) {
+        if (current_method != METHOD::NONE) {
+            this->shader_map[current_method].set_uniform("clip_plane", clip_plane);
             this->shader_map[current_method].set_uniform("view_pos", this->camera.position());
             this->shader_map[current_method].set_uniform("light_pos", this->camera.position());
             this->shader_map[current_method].set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));

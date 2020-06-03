@@ -105,7 +105,7 @@ vector<GLfloat> StreamLine::calculate(glm::vec2 position, float delta, vector<ve
 {
     vector<GLfloat> result;
 
-    for (auto i = 0; i < 10000; i++) {
+    for (auto i = 0; i < 1000000; i++) {
         glm::vec2 temp = this->rk2(position, delta);
 
         if (this->check(temp) == false || table[(int)temp.x][(int)temp.y]) break;
@@ -142,8 +142,8 @@ void StreamLine::run()
             for (size_t j = 0; j < this->data[(int)(i / scale)].size() * scale; j++) {
                 glm::vec2 start((float)i / (float)scale, (float)j / (float)scale);
 
-                vector<GLfloat> front = this->calculate(start, 1.0 / (float)scale, table);
-                vector<GLfloat> back = this->calculate(start, -1.0 / (float)scale, table);
+                vector<GLfloat> front = this->calculate(start, 1.0, table);
+                vector<GLfloat> back = this->calculate(start, -1.0, table);
 
                 if (front.size() != 0) this->_vertex.insert(this->_vertex.end(), front.begin(), front.end());
                 if (back.size() != 0) this->_vertex.insert(this->_vertex.end(), back.begin(), back.end());
@@ -156,7 +156,7 @@ void StreamLine::run()
 
 glm::vec3 StreamLine::shape()
 {
-    return glm::vec3(this->data.size() - 1, this->data[0].size() - 1, 0.0) / 2.0f;
+    return glm::vec3(this->data.size(), this->data[0].size(), 0.0);
 }
 
 vector<GLfloat>& StreamLine::vertex()
