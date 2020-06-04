@@ -713,7 +713,7 @@ void WindowManagement::main_loop()
             this->mesh[i].transform(transformation);
             transformation.set();
 
-            if (this->mesh[i].method() == METHOD::ISOSURFACE || this->mesh[i].method() == METHOD::STREAMLINE) {
+            if (this->mesh[i].method() == METHOD::ISOSURFACE) {
                 this->shader_map[this->mesh[i].method()].set_uniform("object_color", glm::vec4(0.41, 0.37, 0.89, 1.0));
             }
             this->mesh[i].draw(GL_FILL);

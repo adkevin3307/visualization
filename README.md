@@ -1,19 +1,19 @@
 # Visualization Method
 * Iso Surface
 * Slicing Method
+* Stream Line
 
 ## Environment
 * Windows
 * MinGW-W64
     * `g++ 8.1.0`
+    * `c++ 17`
 * `opengl 4.4`
 * `glfw 3.3.2`
 * `glad` with correct version
 * `glm 0.9.9.7`
-
-> If you want to show histogram, you'll need
-> * Python 3.7.3
-> * matplotlib 3.1.2
+* `Dear ImGui 1.76`
+* `ImPlot 0.1`
 
 ## Usage
 ### Compile and Execute
@@ -23,24 +23,14 @@
 * `make static`
     * Compile all file with `g++` static mode (exclude test.cpp)
     * Generate and Execute `main.exe`
-* `make histogram`
-    * Compile all file with `HISTOGRAM` define (exclude test.cpp)
-    * Generate and Execute `main.exe`
 * `make test`
     * Compile all file (exclude main.cpp)
     * Generate and Execute `main.exe`
 * `make clean`
     * Remove all `.exe`, `out`
     * Remove `imgui.ini`
-    * Remove `./Data/Scalar/histogram.txt`
+    * Remove `transfer_function.txt`
     * Remove `obj` directory
-
-> If you want to show histogram, you'll need to run
-> * `make histogram execute`
->     * Compile all file
->     * Generate `histogram.txt` at `./Data/Scalar`
->     * Generate and Execute `main.exe`
-> * `python histogram.py`
 
 ### Control
 * Scroll mouse wheel: Zoom in and Zoom out

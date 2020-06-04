@@ -13,6 +13,7 @@ class StreamLine : public Method {
     using super = Method;
 
 private:
+    float min_vector_magnitude, max_vector_magnitude;
     vector<vector<glm::vec2>> data;
     vector<GLfloat> _vertex;
 
@@ -20,7 +21,7 @@ private:
     bool check(glm::vec2 position);
     glm::vec2 vector_interpolation(glm::vec2 position);
     glm::vec2 rk2(glm::vec2 position, float h);
-    vector<GLfloat> calculate(glm::vec2 position, float delta, vector<vector<bool>> &table);
+    vector<GLfloat> calculate(glm::vec2 position, float delta, vector<vector<bool>> &table, int scale);
 
 public:
     StreamLine(string filename);

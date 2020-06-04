@@ -10,6 +10,7 @@
 using namespace std;
 
 StreamLine::StreamLine(string filename)
+    : min_vector_magnitude(0.0), max_vector_magnitude(0.0)
 {
     if (access(filename.c_str(), F_OK) == -1) throw runtime_error(filename + " Not Exist");
 
@@ -23,37 +24,47 @@ StreamLine::~StreamLine()
 
 void StreamLine::load_data(string filename)
 {
+    int x, y;
+
     fstream file;
     file.open(filename, ios::in);
 
-    int x, y;
     file >> x >> y;
 
     cout << "size: " << x << ", " << y << '\n';
 
-    this->data.resize(x + 1, vector<glm::vec2>(y + 1, glm::vec2(0.0)));
-    for (auto i = 0; i < x; i++) {
-        for (auto j = 0; j < y; j++) {
+    this->data.resize(y, vector<glm::vec2>(x, glm::vec2(0.0)));
+    for (size_t i = 0; i < this->data.size(); i++) {
+        for (size_t j = 0; j < this->data[i].size(); j++) {
             file >> this->data[i][j].x >> this->data[i][j].y;
 
-            if (glm::length(this->data[i][j]) > EPSILON) this->data[i][j] = glm::normalize(this->data[i][j]);
+            if (i == 0 && j == 0) {
+                this->min_vector_magnitude = glm::length(this->data[i][j]);
+                this->max_vector_magnitude = glm::length(this->data[i][j]);
+            }
+
+            this->min_vector_magnitude = min(this->min_vector_magnitude, glm::length(this->data[i][j]));
+            this->max_vector_magnitude = max(this->max_vector_magnitude, glm::length(this->data[i][j]));
         }
     }
 
     file.close();
 
+    this->min_vector_magnitude *= this->min_vector_magnitude;
+    this->max_vector_magnitude *= this->max_vector_magnitude;
+
     vector<GLfloat> border{
-        0.0f, 0.0f,
-        0.0f, (float)y,
+        0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+        0.0f, (float)y, 1.0f, 1.0f, 1.0f,
 
-        0.0f, (float)y,
-        (float)x, (float)y,
+        0.0f, (float)y, 1.0f, 1.0f, 1.0f,
+        (float)x, (float)y, 1.0f, 1.0f, 1.0f,
 
-        (float)x, (float)y,
-        (float)x, 0.0f,
+        (float)x, (float)y, 1.0f, 1.0f, 1.0f,
+        (float)x, 0.0f, 1.0f, 1.0f, 1.0f,
 
-        (float)x, 0.0f,
-        0.0f, 0.0f
+        (float)x, 0.0f, 1.0f, 1.0f, 1.0f,
+        0.0f, 0.0f, 1.0f, 1.0f, 1.0f
     };
 
     this->_vertex.insert(this->_vertex.end(), border.begin(), border.end());
@@ -64,8 +75,8 @@ bool StreamLine::check(glm::vec2 position)
     return (
         position.x >= 0.0 &&
         position.y >= 0.0 &&
-        position.x < this->data.size() - 1 &&
-        position.y < this->data.size() - 1
+        position.x < this->data.size() &&
+        position.y < this->data.size()
     );
 }
 
@@ -73,10 +84,12 @@ glm::vec2 StreamLine::vector_interpolation(glm::vec2 position)
 {
     if (this->check(position) == false) return glm::vec2(0.0);
 
-    glm::vec2 v11 = this->data[(int)position.x][(int)position.y];
-    glm::vec2 v21 = this->data[(int)position.x + 1][(int)position.y];
-    glm::vec2 v12 = this->data[(int)position.x][(int)position.y + 1];
-    glm::vec2 v22 = this->data[(int)position.x + 1][(int)position.y + 1];
+    size_t x = position.x, y = position.y;
+
+    glm::vec2 v11 = this->data[x][y];
+    glm::vec2 v21 = this->data[min(this->data.size() - 1, x + 1)][y];
+    glm::vec2 v12 = this->data[x][min(this->data[0].size() - 1, y + 1)];
+    glm::vec2 v22 = this->data[min(this->data.size() - 1, x + 1)][min(this->data[0].size() - 1, y + 1)];
 
     float mu_x, mu_y;
 
@@ -101,30 +114,46 @@ glm::vec2 StreamLine::rk2(glm::vec2 position, float h)
     return position + h * (position_vector + this->vector_interpolation(temp)) / 2.0f;
 }
 
-vector<GLfloat> StreamLine::calculate(glm::vec2 position, float delta, vector<vector<bool>> &table)
+vector<GLfloat> StreamLine::calculate(glm::vec2 position, float delta, vector<vector<bool>> &table, int scale)
 {
     vector<GLfloat> result;
 
-    for (auto i = 0; i < 1000000; i++) {
+    glm::vec2 start = position;
+
+    for (auto i = 0; i < 10000; i++) {
         glm::vec2 temp = this->rk2(position, delta);
 
-        if (this->check(temp) == false || table[(int)temp.x][(int)temp.y]) break;
+        if ((int)temp.x != (int)start.x || (int)temp.y != (int)start.y) {
+            if (this->check(temp) == false || table[(int)(temp.x * scale)][(int)(temp.y * scale)]) break;
 
-        table[(int)temp.x][(int)temp.y] = true;
+            table[(int)(temp.x * scale)][(int)(temp.y * scale)] = true;
 
-        for (auto j = 0; j < 2; j++) {
-            result.push_back(temp.x);
-            result.push_back(temp.y);
+            start = temp;
+
+            float temp_magnitude = glm::length(this->vector_interpolation(temp));
+            int color_index = ((temp_magnitude - this->min_vector_magnitude) / this->max_vector_magnitude) * 255.0;
+
+            glm::vec3 color;
+            for (auto i = 0; i < 3; i++) {
+                color[i] = min(1.0, max(0.0, (double)RGBTABLE[color_index][i] / 255.0));
+            }
+
+            for (auto j = 0; j < 2; j++) {
+                result.push_back(temp.x);
+                result.push_back(temp.y);
+
+                result.push_back(color[0]);
+                result.push_back(color[1]);
+                result.push_back(color[2]);
+            }
         }
 
         position = temp;
     }
 
     if (result.size() != 0) {
-        result.erase(result.begin());
-        result.erase(result.begin());
-        result.pop_back();
-        result.pop_back();
+        result.erase(result.begin(), result.begin() + 5);
+        result.erase(result.end() - 5, result.end());
     }
 
     return result;
@@ -132,21 +161,24 @@ vector<GLfloat> StreamLine::calculate(glm::vec2 position, float delta, vector<ve
 
 void StreamLine::run()
 {
-    int max_scale = 4;
+    int max_scale = 2;
 
-    for (int scale = 1; scale <= max_scale; scale <<= 1) {
-        vector<vector<bool>> table(this->data.size() * scale, vector<bool>(this->data[0].size() * scale, false));
+    vector<vector<bool>> table(this->data.size() * max_scale, vector<bool>(this->data[0].size() * max_scale, false));
+    for (int scale = max_scale; scale >= 1; scale >>= 1) {
+        cout << "scale: " << (max_scale / scale) << '\n';
 
-        cout << "scale: " << scale << '\n';
-        for (size_t i = 0; i < this->data.size() * scale; i++) {
-            for (size_t j = 0; j < this->data[(int)(i / scale)].size() * scale; j++) {
-                glm::vec2 start((float)i / (float)scale, (float)j / (float)scale);
+        float stride = (float)scale / (float)max_scale;
+        for (size_t i = 0, count_i = 0; i < table.size(); i += scale, count_i++) {
+            for (size_t j = 0, count_j = 0; j < table[i].size(); j += scale, count_j++) {
+                if (table[i][j] == false) {
+                    glm::vec2 start((float)count_i * stride, (float)count_j * stride);
 
-                vector<GLfloat> front = this->calculate(start, 1.0, table);
-                vector<GLfloat> back = this->calculate(start, -1.0, table);
+                    vector<GLfloat> front = this->calculate(start, 0.1, table, scale);
+                    vector<GLfloat> back = this->calculate(start, -0.1, table, scale);
 
-                if (front.size() != 0) this->_vertex.insert(this->_vertex.end(), front.begin(), front.end());
-                if (back.size() != 0) this->_vertex.insert(this->_vertex.end(), back.begin(), back.end());
+                    if (front.size() != 0) this->_vertex.insert(this->_vertex.end(), front.begin(), front.end());
+                    if (back.size() != 0) this->_vertex.insert(this->_vertex.end(), back.begin(), back.end());
+                }
             }
         }
     }
@@ -166,7 +198,7 @@ vector<GLfloat>& StreamLine::vertex()
 
 vector<int> StreamLine::attribute()
 {
-    return vector<int>{2};
+    return vector<int>{2, 3};
 }
 
 GLenum StreamLine::render_mode()
