@@ -13,26 +13,32 @@ Shader::Shader()
     
 }
 
-Shader::Shader(string vertex_path, string fragment_path)
+Shader::Shader(string vertex_path, string fragment_path, string geometry_path)
 {
-    string vertex_code, fragment_code;
-    fstream vertex_file, fragment_file;
-    stringstream vertex_stream, fragment_stream;
+    string vertex_code, fragment_code, geometry_code;
+    fstream vertex_file, fragment_file, geometry_file;
+    stringstream vertex_stream, fragment_stream, geometry_stream;
 
     vertex_file.open(vertex_path, ios::in);
     fragment_file.open(fragment_path, ios::in);
+    if (geometry_path != "") geometry_file.open(geometry_path, ios::in);
 
     vertex_stream << vertex_file.rdbuf();
     fragment_stream << fragment_file.rdbuf();
+    if (geometry_path != "") geometry_stream << geometry_file.rdbuf();
 
     vertex_code = vertex_stream.str();
     fragment_code = fragment_stream.str();
+    if (geometry_path != "") geometry_code = geometry_stream.str();
 
     vertex_file.close();
     fragment_file.close();
+    if (geometry_path != "") geometry_file.close();
 
-    const char *vertex_code_temp = vertex_code.c_str(), *fragment_code_temp = fragment_code.c_str();
-    GLuint vertex, fragment;
+    const char *vertex_code_temp = vertex_code.c_str(), *fragment_code_temp = fragment_code.c_str(), *geometry_code_temp;
+    if (geometry_path != "") geometry_code_temp = geometry_code.c_str();
+
+    GLuint vertex, fragment, geometry;
 
     vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex, 1, &vertex_code_temp, NULL);
@@ -60,9 +66,25 @@ Shader::Shader(string vertex_path, string fragment_path)
         cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED: " << compile_fragment_log << '\n';
     }
 
+    if (geometry_path != "") {
+        geometry = glCreateShader(GL_GEOMETRY_SHADER);
+        glShaderSource(geometry, 1, &geometry_code_temp, NULL);
+        glCompileShader(geometry);
+
+        GLint compile_geometry_success;
+        GLchar compile_geometry_log[1024];
+        glGetShaderiv(geometry, GL_COMPILE_STATUS, &compile_geometry_success);
+        if (compile_geometry_success) cout << geometry_path << ": " << "SHADER::GEOMETRY::COMPILATION_SUCCESS" << '\n';
+        else {
+            glGetShaderInfoLog(geometry, 1024, NULL, compile_geometry_log);
+            cerr << "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED: " << compile_geometry_log << '\n';
+        }
+    }
+
     this->ID = glCreateProgram();
     glAttachShader(this->ID, vertex);
     glAttachShader(this->ID, fragment);
+    if (geometry_path != "") glAttachShader(this->ID, geometry);
     glLinkProgram(ID);
 
     GLint link_success;
@@ -76,6 +98,7 @@ Shader::Shader(string vertex_path, string fragment_path)
 
     glDeleteShader(vertex);
     glDeleteShader(fragment);
+    if (geometry_path != "") glDeleteShader(geometry);
 }
 
 Shader::~Shader()
