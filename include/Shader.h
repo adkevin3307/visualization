@@ -13,7 +13,7 @@ private:
 
 public:
     Shader();
-    Shader(string vertex_path, string fragment_path);
+    Shader(string vertex_path, string fragment_path, string geometry_path = "");
     ~Shader();
 
     void use();
