@@ -50,9 +50,6 @@ void StreamLine::load_data(string filename)
 
     file.close();
 
-    this->min_vector_magnitude *= this->min_vector_magnitude;
-    this->max_vector_magnitude *= this->max_vector_magnitude;
-
     vector<GLfloat> border{
         0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
         0.0f, (float)y, 1.0f, 1.0f, 1.0f,
@@ -76,7 +73,7 @@ bool StreamLine::check(glm::vec2 position)
         position.x >= 0.0 &&
         position.y >= 0.0 &&
         position.x < this->data.size() &&
-        position.y < this->data.size()
+        position.y < this->data[0].size()
     );
 }
 
@@ -132,10 +129,11 @@ vector<GLfloat> StreamLine::calculate(glm::vec2 position, float delta, vector<ve
 
             float temp_magnitude = glm::length(this->vector_interpolation(temp));
             int color_index = ((temp_magnitude - this->min_vector_magnitude) / this->max_vector_magnitude) * 255.0;
+            color_index = min(255, max(0, color_index));
 
             glm::vec3 color;
             for (auto i = 0; i < 3; i++) {
-                color[i] = min(1.0, max(0.0, (double)RGBTABLE[color_index][i] / 255.0));
+                color[i] = (double)RGBTABLE[color_index][i] / 255.0;
             }
 
             for (auto j = 0; j < 2; j++) {
