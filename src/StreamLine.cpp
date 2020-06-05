@@ -33,7 +33,7 @@ void StreamLine::load_data(string filename)
 
     cout << "size: " << x << ", " << y << '\n';
 
-    this->data.resize(y, vector<glm::vec2>(x, glm::vec2(0.0)));
+    this->data.resize(x, vector<glm::vec2>(y, glm::vec2(0.0)));
     for (size_t i = 0; i < this->data.size(); i++) {
         for (size_t j = 0; j < this->data[i].size(); j++) {
             file >> this->data[i][j].x >> this->data[i][j].y;
