@@ -398,6 +398,8 @@ void WindowManagement::gui()
     static string vector_file = "1.vec";
     static vector<string> vector_files;
 
+    static bool equalization = false;
+
     static int current_color = 0;
 
     static float clip_normal[] = { 0.0, 0.0, 0.0 }, clip_distance = 1.0;
@@ -412,6 +414,8 @@ void WindowManagement::gui()
         generate_combo(methods, scalar_files, vector_files);
         first_time = false;
     }
+
+    ImGui::ShowDemoWindow();
 
     // set Controller position and size
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Once);
@@ -456,15 +460,17 @@ void WindowManagement::gui()
     }
 
     if (method != "Stream Line") {
+        ImGui::Checkbox("Equalization", &equalization);
+
         if (ImGui::Button("Load")) {
-            load_volume(scalar_file, histogram, distribution, false);
+            load_volume(scalar_file, histogram, distribution, equalization);
         }
         ImGui::SameLine();
     }
 
     if (ImGui::Button("Show")) {
         if (method != "Stream Line") {
-            save_transfer_table(scalar_file, color, alpha, false);
+            save_transfer_table(scalar_file, color, alpha, equalization);
         }
 
         current_method = methods[method];
