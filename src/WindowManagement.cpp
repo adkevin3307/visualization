@@ -194,7 +194,7 @@ void WindowManagement::set_callback()
     glfwSetScrollCallback(this->window, scrollCallback);
 }
 
-void WindowManagement::load_volume(string filename, vector<float> &histogram, vector<vector<float>> &distribution)
+void load_volume(string filename, vector<float> &histogram, vector<vector<float>> &distribution, bool equalization)
 {
     string inf_file = "./Data/Scalar/" + filename + ".inf", raw_file = "./Data/Scalar/" + filename + ".raw";
 
@@ -203,6 +203,8 @@ void WindowManagement::load_volume(string filename, vector<float> &histogram, ve
     cout << "==================== Info ====================" << '\n';
     volume.show();
     cout << "==============================================" << '\n';
+
+    if (equalization) volume.equalization();
 
     histogram = volume.histogram();
     distribution = volume.distribution(MAX_GRADIENT_MAGINATE);
@@ -214,7 +216,7 @@ void WindowManagement::load_volume(string filename, vector<float> &histogram, ve
     }
 }
 
-void WindowManagement::save_transfer_table(string filename, vector<vector<float>> &color, vector<vector<float>> &alpha)
+void save_transfer_table(string filename, vector<vector<float>> &color, vector<vector<float>> &alpha, bool equalization)
 {
     cout << "==================== Save ====================" << '\n';
 
@@ -223,6 +225,9 @@ void WindowManagement::save_transfer_table(string filename, vector<vector<float>
 
     cout << "filename: " << filename << '\n';
     file << filename << '\n';
+
+    cout << "equalization: " << (equalization ? "True" : "False") << '\n';
+    file << equalization << '\n';
 
     cout << "table size: " << alpha.size() << ", " << alpha[0].size() << '\n';
     file << alpha.size() << ' ' << alpha[0].size() << '\n';
@@ -354,10 +359,8 @@ double gaussian(double mu, double sigma, double value)
 {
     if (sigma == 0.0) return 0.0;
 
-    // double coefficient = sigma * sqrt(2 * M_PI);
     double result = exp(-1 * (value - mu) * (value - mu) / (2 * sigma * sigma));
 
-    // return result / coefficient;
     return result;
 }
 
@@ -454,14 +457,14 @@ void WindowManagement::gui()
 
     if (method != "Stream Line") {
         if (ImGui::Button("Load")) {
-            this->load_volume(scalar_file, histogram, distribution);
+            load_volume(scalar_file, histogram, distribution, false);
         }
         ImGui::SameLine();
     }
 
     if (ImGui::Button("Show")) {
         if (method != "Stream Line") {
-            this->save_transfer_table(scalar_file, color, alpha);
+            save_transfer_table(scalar_file, color, alpha, false);
         }
 
         current_method = methods[method];

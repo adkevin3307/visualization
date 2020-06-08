@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <cctype>
 #include <map>
+#include <numeric>
 
 using namespace std;
 
@@ -173,6 +174,41 @@ void Volume::calculate()
             }
         }
     }
+}
+
+void Volume::equalization()
+{
+    vector<float> result = this->histogram();
+    vector<float> pdf(256, 0.0), cdf(256, 0.0);
+
+    double sum = accumulate(result.begin(), result.end(), 0.0);
+
+    for (size_t i = 0; i < pdf.size(); i++) {
+        pdf[i] = result[i] / sum;
+    }
+
+    for (size_t i = 0; i < cdf.size(); i++) {
+        if (i == 0) cdf[i] = pdf[i];
+        else cdf[i] = cdf[i - 1] + pdf[i];
+    }
+
+    map<int, int> index_map;
+    for (size_t i = 0; i < cdf.size(); i++) {
+        index_map[i] = (int)round(cdf[i] * (cdf.size() - 1));
+    }
+
+    double temp = 256.0 / (this->_max_value - this->_min_value + 1);
+    for (auto i = 0; i < this->_shape.x; i++) {
+        for (auto j = 0; j < this->_shape.y; j++) {
+            for (auto k = 0; k < this->_shape.z; k++) {
+                float value = this->data[i][j][k].first;
+
+                this->data[i][j][k].first = index_map[(value - this->_min_value) * temp];
+            }
+        }
+    }
+
+    this->calculate();
 }
 
 vector<float> Volume::histogram()

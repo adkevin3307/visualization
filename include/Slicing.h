@@ -16,12 +16,11 @@ class Slicing : public Method {
 private:
 	int _index;
     vector<vector<GLfloat>> _vertex;
-	vector<float> _texture_1d, _texture_2d, _texture_3d;
+	vector<float> _texture_2d, _texture_3d;
 	vector<vector<float>> _template;
-	glm::ivec3 _texture_1d_shape, _texture_2d_shape, _texture_3d_shape;
+	glm::ivec3 _texture_2d_shape, _texture_3d_shape;
 
 	void init();
-	void generate_texture_1d();
 	void generate_texture_2d();
 	void generate_texture_3d();
 	void push(glm::vec3 data, int index);
@@ -34,10 +33,8 @@ public:
 	~Slicing();
 
 	bool run(glm::vec3 view_position);
-	vector<float>& texture_1d();
 	vector<float>& texture_2d();
 	vector<float>& texture_3d();
-	glm::ivec3 texture_1d_shape();
 	glm::ivec3 texture_2d_shape();
 	glm::ivec3 texture_3d_shape();
 

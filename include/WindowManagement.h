@@ -11,7 +11,6 @@
 #include "Camera.h"
 #include "Shader.h"
 #include "Mesh.h"
-#include "Volume.h"
 
 using namespace std;
 
@@ -31,8 +30,6 @@ private:
 
     void set_callback();
 
-    void load_volume(string filename, vector<float> &histogram, vector<vector<float>> &distribution);
-    void save_transfer_table(string filename, vector<vector<float>> &color, vector<vector<float>> &alpha);
     void load(string filename, METHOD method, bool update);
     void gui();
 

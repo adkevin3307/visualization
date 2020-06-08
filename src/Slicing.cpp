@@ -19,8 +19,6 @@ Slicing::Slicing(Volume &volume) : super::Method(volume)
 
 Slicing::Slicing(string inf_file, string raw_file) : super::Method(inf_file, raw_file)
 {
-    super::volume.show();
-
     this->init();
 }
 
@@ -59,7 +57,6 @@ void Slicing::init()
         }
     };
 
-    this->generate_texture_1d();
     this->generate_texture_2d();
     this->generate_texture_3d();
 
@@ -67,38 +64,17 @@ void Slicing::init()
     this->calculate();
 }
 
-void Slicing::generate_texture_1d()
-{
-    glm::vec2 limit_value = super::volume.limit_value();
-
-    this->_texture_1d.resize((limit_value.y - limit_value.x + 1) * 4, 0.0);
-
-    for (auto i = (74 - limit_value.x) * 4; i <= (86 - limit_value.x) * 4; i += 4) {
-        this->_texture_1d[i + 0] = 0.0;
-        this->_texture_1d[i + 1] = 1.0;
-        this->_texture_1d[i + 2] = 0.0;
-        this->_texture_1d[i + 3] = 0.1097;
-    }
-
-    for (auto i = (193 - limit_value.x) * 4; i <= (199 - limit_value.x) * 4; i += 4) {
-        this->_texture_1d[i + 0] = 1.0;
-        this->_texture_1d[i + 1] = 0.0;
-        this->_texture_1d[i + 2] = 0.0;
-        this->_texture_1d[i + 3] = 0.1387;
-    }
-
-    this->_texture_1d_shape = glm::ivec3((limit_value.y - limit_value.x + 1), 0, 0);
-}
-
 void Slicing::generate_texture_2d()
 {
     int x, y;
-    string temp;
+    bool equalization;
+    string volume_name;
 
     fstream file;
     file.open("transfer_function.txt", ios::in);
 
-    file >> temp;
+    file >> volume_name;
+    file >> equalization;
     file >> x >> y;
     this->_texture_2d.resize(x * y * 4);
 
@@ -114,6 +90,8 @@ void Slicing::generate_texture_2d()
     file.close();
 
     this->_texture_2d_shape = glm::ivec3(x, y, 0);
+
+    if (equalization) super::volume.equalization();
 }
 
 void Slicing::generate_texture_3d()
@@ -205,11 +183,6 @@ bool Slicing::run(glm::vec3 view_position)
     return false;
 }
 
-vector<float>& Slicing::texture_1d()
-{
-    return this->_texture_1d;
-}
-
 vector<float>& Slicing::texture_2d()
 {
     return this->_texture_2d;
@@ -218,11 +191,6 @@ vector<float>& Slicing::texture_2d()
 vector<float>& Slicing::texture_3d()
 {
     return this->_texture_3d;
-}
-
-glm::ivec3 Slicing::texture_1d_shape()
-{
-    return this->_texture_1d_shape;
 }
 
 glm::ivec3 Slicing::texture_2d_shape()

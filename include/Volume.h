@@ -44,6 +44,7 @@ public:
     Volume(string inf_file, string raw_file);
     ~Volume();
 
+    void equalization();
     vector<float> histogram();
     vector<vector<float>> distribution(double gradient_max);
     double average();
