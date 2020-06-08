@@ -207,7 +207,7 @@ void load_volume(string filename, vector<float> &histogram, vector<vector<float>
     if (equalization) volume.equalization();
 
     histogram = volume.histogram();
-    distribution = volume.distribution(MAX_GRADIENT_MAGINATE);
+    distribution = volume.distribution(MAX_GRADIENT_MAGNITUDE);
 
     for (size_t i = 0; i < distribution.size(); i++) {
         for (size_t j = 0; j < distribution[i].size(); j++) {
@@ -387,7 +387,7 @@ void WindowManagement::gui()
     static METHOD current_method = METHOD::NONE;
     static bool first_time = true;
 
-    static double size = 20.0 * log2(MAX_GRADIENT_MAGINATE) + 1.0;
+    static double size = 20.0 * log2(MAX_GRADIENT_MAGNITUDE) + 1.0;
 
     static string method = "Iso Surface";
     static map<string, METHOD> methods;
@@ -414,8 +414,6 @@ void WindowManagement::gui()
         generate_combo(methods, scalar_files, vector_files);
         first_time = false;
     }
-
-    ImGui::ShowDemoWindow();
 
     // set Controller position and size
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Once);

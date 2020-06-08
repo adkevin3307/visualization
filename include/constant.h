@@ -42,7 +42,7 @@ const static double EPSILON = 1e-6;
 const static int WIDTH = 1440;
 const static int HEIGHT = 900;
 
-const static float MAX_GRADIENT_MAGINATE = 256.0;
+const static float MAX_GRADIENT_MAGNITUDE = 256.0;
 
 const static int RGBTABLE[256][3] = {
     { 255, 255, 255 },
