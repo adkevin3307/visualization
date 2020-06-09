@@ -197,7 +197,7 @@ void Volume::equalization()
         index_map[i] = (int)round(cdf[i] * (cdf.size() - 1));
     }
 
-    double temp = 256.0 / (this->_max_value - this->_min_value + 1);
+    double temp = 255.0 / (this->_max_value - this->_min_value);
     for (auto i = 0; i < this->_shape.x; i++) {
         for (auto j = 0; j < this->_shape.y; j++) {
             for (auto k = 0; k < this->_shape.z; k++) {
@@ -208,6 +208,9 @@ void Volume::equalization()
         }
     }
 
+    this->_min_value = 0;
+    this->_max_value = 255;
+
     this->calculate();
 }
 
@@ -216,7 +219,7 @@ vector<float> Volume::histogram()
     vector<float> result;
     result.resize(256, 0.0);
 
-    double temp = 256.0 / (this->_max_value - this->_min_value + 1);
+    double temp = 255.0 / (this->_max_value - this->_min_value);
 
     for (auto i = 0; i < this->_shape.x; i++) {
         for (auto j = 0; j < this->_shape.y; j++) {
@@ -237,7 +240,7 @@ vector<vector<float>> Volume::distribution(double gradient_max)
     vector<vector<float>> result;
     result.resize(256, vector<float>(size, 0.0));
 
-    double temp = 256.0 / (this->_max_value - this->_min_value + 1);
+    double temp = 255.0 / (this->_max_value - this->_min_value);
 
     for (auto i = 0; i < this->_shape.x; i++) {
         for (auto j = 0; j < this->_shape.y; j++) {

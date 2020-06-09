@@ -1,10 +1,9 @@
-# IsoSurface Method
+# Stream Line Method
 class `StreamLine` is inheriting from class `Method`
 
 ## Explain
 ![](https://i.imgur.com/exBZkM0.png)
 * trace stream line position with current position vector
-
 ![](https://i.imgur.com/5CEm5rp.png)
 * calculate next position with rk2 method
 
@@ -94,7 +93,7 @@ vertex:
 attribute:
     override parent class virtual function, get attribute let will use in VAO
     - return:
-        (vector<int>): return { 3, 3 }, means position (x, y, z) and color (r, g, b)
+        (vector<int>): return { 2, 3 }, means position (x, y) and color (r, g, b)
 
 render_mode:
     override parent class virtual function, get render mode let will use in glDrawArrays
