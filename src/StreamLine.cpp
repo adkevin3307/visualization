@@ -49,22 +49,6 @@ void StreamLine::load_data(string filename)
     }
 
     file.close();
-
-    vector<GLfloat> border{
-        0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-        0.0f, (float)y, 1.0f, 1.0f, 1.0f,
-
-        0.0f, (float)y, 1.0f, 1.0f, 1.0f,
-        (float)x, (float)y, 1.0f, 1.0f, 1.0f,
-
-        (float)x, (float)y, 1.0f, 1.0f, 1.0f,
-        (float)x, 0.0f, 1.0f, 1.0f, 1.0f,
-
-        (float)x, 0.0f, 1.0f, 1.0f, 1.0f,
-        0.0f, 0.0f, 1.0f, 1.0f, 1.0f
-    };
-
-    this->_vertex.insert(this->_vertex.end(), border.begin(), border.end());
 }
 
 bool StreamLine::check(glm::vec2 position)
@@ -126,32 +110,44 @@ vector<GLfloat> StreamLine::calculate(glm::vec2 position, float delta, vector<ve
             table[(int)(temp.x * scale)][(int)(temp.y * scale)] = true;
 
             start = temp;
-
-            float temp_magnitude = glm::length(this->vector_interpolation(temp));
-            int color_index = ((temp_magnitude - this->min_vector_magnitude) / this->max_vector_magnitude) * 255.0;
-            color_index = min(255, max(0, color_index));
-
-            glm::vec3 color;
-            for (auto i = 0; i < 3; i++) {
-                color[i] = (double)RGBTABLE[color_index][i] / 255.0;
-            }
-
-            for (auto j = 0; j < 2; j++) {
-                result.push_back(temp.x);
-                result.push_back(temp.y);
-
-                result.push_back(color[0]);
-                result.push_back(color[1]);
-                result.push_back(color[2]);
-            }
         }
+
+        float temp_magnitude = glm::length(this->vector_interpolation(temp));
+        int color_index = ((temp_magnitude - this->min_vector_magnitude) / this->max_vector_magnitude) * 255.0;
+        color_index = min(255, max(0, color_index));
+
+        glm::vec3 color;
+        for (auto i = 0; i < 3; i++) {
+            color[i] = (double)RGBTABLE[color_index][i] / 255.0;
+        }
+
+        result.push_back(temp.x);
+        result.push_back(temp.y);
+
+        result.push_back(color[0]);
+        result.push_back(color[1]);
+        result.push_back(color[2]);
+
+        result.push_back(-1.0);
 
         position = temp;
     }
 
     if (result.size() != 0) {
-        result.erase(result.begin(), result.begin() + 5);
-        result.erase(result.end() - 5, result.end());
+        if (delta >= 0) {
+            int count = 0;
+            for (size_t i = 5; i < result.size(); i += 6) {
+                result[i] = max(1.0, 3.0 / ((count / 5.0) + 1));
+                count += 1;
+            }
+        }
+        else {
+            int count = 0;
+            for (int i = result.size() - 1; i >= 0; i -= 6) {
+                result[i] = max(1.0, 3.0 / ((count / 5.0) + 1));
+                count += 1;
+            }
+        }
     }
 
     return result;
@@ -196,10 +192,10 @@ vector<GLfloat>& StreamLine::vertex()
 
 vector<int> StreamLine::attribute()
 {
-    return vector<int>{2, 3};
+    return vector<int>{2, 3, 1};
 }
 
 GLenum StreamLine::render_mode()
 {
-    return GL_LINES;
+    return GL_POINTS;
 }

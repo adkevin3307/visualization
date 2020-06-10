@@ -14,32 +14,32 @@ class Slicing : public Method {
     using super = Method;
 
 private:
-	int _index;
+    int _index;
     vector<vector<GLfloat>> _vertex;
-	vector<float> _texture_2d, _texture_3d;
-	vector<vector<float>> _template;
-	glm::ivec3 _texture_2d_shape, _texture_3d_shape;
+    vector<float> _texture_2d, _texture_3d;
+    vector<vector<float>> _template;
+    glm::ivec3 _texture_2d_shape, _texture_3d_shape;
 
-	void init();
-	void generate_texture_2d();
-	void generate_texture_3d();
-	void push(glm::vec3 data, int index);
-	void calculate();
+    void init();
+    void generate_texture_2d();
+    void generate_texture_3d();
+    void push(glm::vec3 data, int index);
+    void calculate();
 
 public:
-	Slicing();
-	Slicing(Volume &volume);
-	Slicing(string inf_file, string raw_file);
-	~Slicing();
+    Slicing();
+    Slicing(Volume &volume);
+    Slicing(string inf_file, string raw_file);
+    ~Slicing();
 
-	bool run(glm::vec3 view_position);
-	vector<float>& texture_2d();
-	vector<float>& texture_3d();
-	glm::ivec3 texture_2d_shape();
-	glm::ivec3 texture_3d_shape();
+    bool run(glm::vec3 view_position);
+    vector<float>& texture_2d();
+    vector<float>& texture_3d();
+    glm::ivec3 texture_2d_shape();
+    glm::ivec3 texture_3d_shape();
 
-	glm::vec3 shape() override;
-	vector<GLfloat>& vertex() override;
-	vector<int> attribute() override;
-	GLenum render_mode() override;
+    glm::vec3 shape() override;
+    vector<GLfloat>& vertex() override;
+    vector<int> attribute() override;
+    GLenum render_mode() override;
 };
