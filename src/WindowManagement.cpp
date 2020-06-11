@@ -305,6 +305,42 @@ void WindowManagement::load(string filename, METHOD method, bool update)
                 StreamLine stream_line(filename);
                 stream_line.run();
 
+                int border_size = 32 << stream_line.max_scale();
+                cout << "border size: " << border_size << '\n';
+                glm::vec3 shape = stream_line.shape();
+
+                vector<GLfloat> border;
+                for (auto i = 0; i < border_size + 1; i++) {
+                    for (auto j = 0; j < 2; j++) {
+                        border.push_back(i / (float)border_size * shape.x);
+                        border.push_back(j * shape.y);
+
+                        border.push_back(0.41);
+                        border.push_back(0.37);
+                        border.push_back(0.89);
+                        border.push_back(0.20);
+
+                        border.push_back(1);
+                    }
+
+                    for (auto j = 0; j < 2; j++) {
+                        border.push_back(j * shape.x);
+                        border.push_back(i / (float)border_size * shape.y);
+
+                        border.push_back(0.41);
+                        border.push_back(0.37);
+                        border.push_back(0.89);
+                        border.push_back(0.20);
+
+                        border.push_back(1);
+                    }
+                }
+
+                Mesh border_mesh(border, vector<int>{2, 4, 1}, GL_LINES, shape, METHOD::STREAMLINE);
+                border_mesh.init();
+
+                this->mesh.push_back(border_mesh);
+
                 Mesh temp_mesh(stream_line, METHOD::STREAMLINE);
                 temp_mesh.init();
 
