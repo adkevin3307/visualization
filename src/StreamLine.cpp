@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
-#include <io.h>
+#include <unistd.h>
 
 using namespace std;
 
