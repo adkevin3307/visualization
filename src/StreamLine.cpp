@@ -171,6 +171,13 @@ vector<GLfloat> StreamLine::calculate(glm::vec2 position, float delta, int scale
                 count += 1;
             }
         }
+        else {
+            int count = 0;
+            for (int i = result.size() - 1; i >= 0; i -= 7) {
+                result[i] = max(1.0, 3.0 / ((count / 5.0) + 1));
+                count += 1;
+            }
+        }
     }
 
     return result;
@@ -190,12 +197,14 @@ void StreamLine::run()
             for (size_t j = 0; j < this->tables[scale][i].size(); j++) {
                 if (this->tables[scale][i][j] == false) {
                     glm::vec2 start;
-                    start.x = ((float)i / (float)this->tables[scale].size()) * (float)this->data.size();
-                    start.y = ((float)j / (float)this->tables[scale][i].size()) * (float)this->data[i].size();
+                    start.x = (((float)i + 0.5) / (float)this->tables[scale].size()) * (float)this->data.size();
+                    start.y = (((float)j + 0.5) / (float)this->tables[scale][i].size()) * (float)this->data[i].size();
 
                     vector<GLfloat> line = this->calculate(start, 0.1, scale);
+                    vector<GLfloat> back_line = this->calculate(start, -0.1, scale);
 
-                    if (line.size() >= 10) this->_vertex.insert(this->_vertex.end(), line.begin(), line.end());
+                    if (line.size() >= 0) this->_vertex.insert(this->_vertex.end(), line.begin(), line.end());
+                    if (back_line.size() > 0) this->_vertex.insert(this->_vertex.end(), back_line.begin(), back_line.end());
                 }
             }
         }
