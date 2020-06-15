@@ -418,8 +418,6 @@ double gaussian_2d(glm::vec2 mu, glm::vec2 sigma, glm::vec2 value)
 
 void WindowManagement::gui()
 {
-    static Volume volume;
-
     static METHOD current_method = METHOD::NONE;
     static bool first_time = true;
 
