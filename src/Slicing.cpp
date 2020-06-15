@@ -149,7 +149,7 @@ void Slicing::calculate()
 
                 glm::vec3 plane = basic * plane_position;
                 glm::vec3 texture = basic;
-                plane[index] = start;
+                plane[index] = start * super::volume.voxel_size()[index];
                 texture[index] = start / shape[index];
 
                 this->push(plane, i);
