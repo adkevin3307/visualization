@@ -34,7 +34,8 @@ enum METHOD {
     NONE,
     ISOSURFACE,
     SLICING,
-    STREAMLINE
+    STREAMLINE,
+    SAMMONMAPPING
 };
 
 const static double EPSILON = 1e-6;

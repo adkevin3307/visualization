@@ -19,6 +19,7 @@
 #include "IsoSurface.h"
 #include "Slicing.h"
 #include "StreamLine.h"
+#include "SammonMapping.h"
 #include "Transformation.h"
 
 using namespace std;
@@ -348,6 +349,19 @@ void WindowManagement::load(string filename, METHOD method, bool update)
 
                 break;
             }
+            case METHOD::SAMMONMAPPING: {
+                cout << "Method: " << "Sammon Mapping" << '\n';
+
+                filename = base + "Scalar/" + filename;
+
+                SammonMapping sammon_mapping(filename + ".inf", filename + ".raw");
+                sammon_mapping.run(0.3);
+
+                Mesh temp_mesh(sammon_mapping, METHOD::SAMMONMAPPING);
+                temp_mesh.init();
+
+                this->mesh.push_back(temp_mesh);
+            }
             default:
                 break;
         }
@@ -365,6 +379,7 @@ void generate_combo(map<string, METHOD> &methods, vector<string> &scalar_files, 
     methods["Iso Surface"] = METHOD::ISOSURFACE;
     methods["Slicing"] = METHOD::SLICING;
     methods["Stream Line"] = METHOD::STREAMLINE;
+    methods["Sammon Mapping"] = METHOD::SAMMONMAPPING;
 
     // generate scalar files combo
     DIR *dp;
@@ -468,7 +483,7 @@ void WindowManagement::gui()
         ImGui::EndCombo();
     }
 
-    if (method == "Iso Surface" || method == "Slicing") {
+    if (method == "Iso Surface" || method == "Slicing" || method == "Sammon Mapping") {
         if (ImGui::BeginCombo("## Scalar Files", scalar_file.c_str())) {
             for (size_t i = 0; i < scalar_files.size(); i++) {
                 bool selected = (scalar_file == scalar_files[i]);
@@ -491,7 +506,7 @@ void WindowManagement::gui()
         }
     }
 
-    if (method != "Stream Line") {
+    if (method != "Stream Line" && method != "Sammon Mapping") {
         ImGui::Checkbox("Equalization", &equalization);
 
         if (ImGui::Button("Load")) {
@@ -501,16 +516,16 @@ void WindowManagement::gui()
     }
 
     if (ImGui::Button("Show")) {
-        if (method != "Stream Line") {
+        if (method != "Stream Line" && method != "Sammon Mapping") {
             save_transfer_table(scalar_file, color, alpha, equalization);
         }
 
         current_method = methods[method];
-        if (current_method == METHOD::ISOSURFACE || current_method == METHOD::SLICING) {
-            this->load(scalar_file, current_method, false);
-        }
-        else if (current_method == METHOD::STREAMLINE) {
+        if (current_method == METHOD::STREAMLINE) {
             this->load(vector_file, current_method, false);
+        }
+        else {
+            this->load(scalar_file, current_method, false);
         }
         
     }
@@ -532,14 +547,17 @@ void WindowManagement::gui()
             }
         }
     }
-    if (method != "Stream Line") {
+
+    if (method != "Stream Line" && method != "Sammon Mapping") {
         // select color
         ImGui::RadioButton("Red", &current_color, 0);
         ImGui::SameLine();
         ImGui::RadioButton("Green", &current_color, 1);
         ImGui::SameLine();
         ImGui::RadioButton("Blue", &current_color, 2);
+    }
 
+    if (method != "Stream Line" && method != "Sammon Mapping") {
         ImGui::SetWindowFontScale(1.0);
         ImGui::SliderFloat3("Clip Plane Normal", clip_normal, -1.0, 1.0);
         ImGui::SliderFloat("Clip Plane Distanse", &clip_distance, -150.0, 150.0);
@@ -547,7 +565,7 @@ void WindowManagement::gui()
 
     ImGui::End();
 
-    if (method == "Stream Line") {
+    if (method == "Stream Line" || method == "Sammon Mapping") {
         histogram.clear();
         distribution.clear();
     }
@@ -654,7 +672,7 @@ void WindowManagement::gui()
         ImGui::End();
     }
 
-    if (method != "Stream Line") {
+    if (method != "Stream Line" && method != "Sammon Mapping") {
         glm::vec3 temp = glm::make_vec3(clip_normal);
         if (glm::length(temp) > EPSILON) temp = glm::normalize(temp);
         glm::vec4 clip_plane = glm::vec4(temp, clip_distance);
@@ -721,6 +739,8 @@ void WindowManagement::init()
 
     this->set_callback();
 
+    cout << "=================== Shader ===================" << '\n';
+
     this->shader_map[METHOD::ISOSURFACE] = Shader(
         "./src/shader/iso_surface/vertex.glsl",
         "./src/shader/iso_surface/fragment.glsl"
@@ -733,6 +753,12 @@ void WindowManagement::init()
         "./src/shader/stream_line/vertex.glsl",
         "./src/shader/stream_line/fragment.glsl"
     );
+    this->shader_map[METHOD::SAMMONMAPPING] = Shader(
+        "./src/shader/sammon_mapping/vertex.glsl",
+        "./src/shader/sammon_mapping/fragment.glsl"
+    );
+
+    cout << "==============================================" << '\n';
 }
 
 void WindowManagement::main_loop()
