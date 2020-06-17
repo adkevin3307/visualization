@@ -16,8 +16,10 @@ StreamLine::StreamLine(string filename)
 
     this->load_data(filename);
 
-    this->tables.resize(3);
-    int size = 32;
+    this->tables.resize(2);
+    this->_base_scale = 16;
+
+    int size = this->_base_scale;
     for (size_t i = 0; i < this->tables.size(); i++, size <<= 1) {
         this->tables[i].resize(size, vector<bool>(size, false));
     }
@@ -235,6 +237,11 @@ vector<int> StreamLine::attribute()
 GLenum StreamLine::render_mode()
 {
     return GL_POINTS;
+}
+
+int StreamLine::base_scale()
+{
+    return this->_base_scale;
 }
 
 int StreamLine::max_scale()

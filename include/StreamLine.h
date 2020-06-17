@@ -13,7 +13,7 @@ class StreamLine : public Method {
     using super = Method;
 
 private:
-    int _max_scale;
+    int _max_scale, _base_scale;
     float min_vector_magnitude, max_vector_magnitude;
     vector<vector<glm::vec2>> data;
     vector<vector<vector<bool>>> tables;
@@ -31,6 +31,7 @@ public:
     StreamLine(string filename);
     ~StreamLine();
 
+    int base_scale();
     int max_scale();
 
     void run();
