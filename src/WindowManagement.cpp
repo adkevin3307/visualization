@@ -306,7 +306,7 @@ void WindowManagement::load(string filename, METHOD method, bool update)
                 StreamLine stream_line(filename);
                 stream_line.run();
 
-                int border_size = 32 << stream_line.max_scale();
+                int border_size = stream_line.base_scale() << stream_line.max_scale();
                 cout << "border size: " << border_size << '\n';
                 glm::vec3 shape = stream_line.shape();
 
@@ -657,6 +657,8 @@ void WindowManagement::gui()
 
                     float gray = min(255.0f, distribution[i][j]);
 
+                    ImPlot::PushPlotClipRect();
+
                     ImGui::GetWindowDrawList()->AddRectFilled(rmin, rmax, IM_COL32(gray, gray, gray, 255));
 
                     if (alpha[i][j] > EPSILON) {
@@ -664,6 +666,8 @@ void WindowManagement::gui()
 
                         ImGui::GetWindowDrawList()->AddRectFilled(rmin, rmax, IM_COL32(137, 207, 240, alpha_value));
                     }
+
+                    ImPlot::PopPlotClipRect();
                 }
             }
 
