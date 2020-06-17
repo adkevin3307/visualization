@@ -38,7 +38,8 @@ Volume::Volume(string inf_file, string raw_file) : Volume::Volume()
 
 Volume::~Volume()
 {
-
+    this->data.clear();
+    this->data.shrink_to_fit();
 }
 
 glm::vec3 Volume::gradient(int x, int y, int z)

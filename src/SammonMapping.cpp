@@ -266,7 +266,7 @@ void SammonMapping::run(float alpha)
                 mapping_point[i] += delta;
                 mapping_point[j] -= delta;
 
-                sum += (fabs(delta.x) + fabs(delta.y));
+                sum += glm::length(delta) * 2;
             }
         }
         lambda *= alpha;

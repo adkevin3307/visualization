@@ -448,8 +448,11 @@ double gaussian_2d(glm::vec2 mu, glm::vec2 sigma, glm::vec2 value)
 
 void WindowManagement::gui()
 {
-    static METHOD current_method = METHOD::NONE;
+    static bool loaded = false;
+    static bool showed = false;
     static bool first_time = true;
+
+    static METHOD current_method = METHOD::NONE;
 
     static double size = 20.0 * log2(MAX_GRADIENT_MAGNITUDE) + 1.0;
 
@@ -547,17 +550,21 @@ void WindowManagement::gui()
         }
     }
 
-    if (method != "Stream Line" && method != "Sammon Mapping") {
+    if (method == "Iso Surface" || method == "Slicing") {
         ImGui::Checkbox("Equalization", &equalization);
 
         if (ImGui::Button("Load")) {
+            loaded = true;
+
             load_volume(scalar_file, histogram, distribution, equalization);
         }
         ImGui::SameLine();
     }
 
-    if (ImGui::Button("Show")) {
-        if (method != "Stream Line" && method != "Sammon Mapping") {
+    if ((loaded || method == "Stream Line" || method == "Sammon Mapping") && ImGui::Button("Show")) {
+        showed = true;
+
+        if (method == "Slicing") {
             save_transfer_table(scalar_file, color, alpha, equalization);
         }
 
@@ -565,15 +572,8 @@ void WindowManagement::gui()
         if (current_method == METHOD::STREAMLINE) {
             this->load(vector_file, current_method, false, false);
         }
-        else if (current_method == METHOD::SAMMONMAPPING) {
-            if (current_data == 0) {
-                // Scalar Data
-                this->load(scalar_file, current_method, false, false);
-            }
-            else if (current_data == 1) {
-                // Custom Data
-                this->load(custom_file, current_method, false, true);
-            }
+        else if (current_method == METHOD::SAMMONMAPPING && current_data == 1) {
+            this->load(custom_file, current_method, false, true);
         }
         else {
             this->load(scalar_file, current_method, false, false);
@@ -585,21 +585,35 @@ void WindowManagement::gui()
     if (ImGui::Button("Clean")) {
         current_method = METHOD::NONE;
 
-        if (this->mesh.size() != 0) {
-            this->mesh.clear();
-        }
-        else {
-            for (size_t i = 0; i < color.size(); i++) {
-                fill(color[i].begin(), color[i].end(), 0.0);
+        if (showed) {
+            if (mesh.size() != 0) {
+                this->mesh.clear();
             }
+            else {
+                showed = false;
 
-            for (size_t i = 0; i < alpha.size(); i++) {
-                fill(alpha[i].begin(), alpha[i].end(), 0.0);
+                for (size_t i = 0; i < color.size(); i++) {
+                    fill(color[i].begin(), color[i].end(), 0.0);
+                }
+
+                for (size_t i = 0; i < alpha.size(); i++) {
+                    fill(alpha[i].begin(), alpha[i].end(), 0.0);
+                }
             }
+        }
+        else if ((!showed) && loaded) {
+            loaded = false;
+
+            histogram.clear();
+
+            for (size_t i = 0; i < distribution.size(); i++) {
+                distribution[i].clear();
+            }
+            distribution.clear();
         }
     }
 
-    if (method != "Stream Line" && method != "Sammon Mapping") {
+    if (method == "Iso Surface" || method == "Slicing") {
         // select color
         ImGui::RadioButton("Red", &current_color, 0);
         ImGui::SameLine();
@@ -608,18 +622,13 @@ void WindowManagement::gui()
         ImGui::RadioButton("Blue", &current_color, 2);
     }
 
-    if (method != "Stream Line" && method != "Sammon Mapping") {
+    if (method == "Iso Surface" || method == "Slicing") {
         ImGui::SetWindowFontScale(1.0);
         ImGui::SliderFloat3("Clip Plane Normal", clip_normal, -1.0, 1.0);
         ImGui::SliderFloat("Clip Plane Distanse", &clip_distance, -150.0, 150.0);
     }
 
     ImGui::End();
-
-    if (method == "Stream Line" || method == "Sammon Mapping") {
-        histogram.clear();
-        distribution.clear();
-    }
 
     if (histogram.size() != 0) {
         float max_amount = *max_element(histogram.begin(), histogram.end()) + 10;

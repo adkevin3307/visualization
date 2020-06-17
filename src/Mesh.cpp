@@ -44,7 +44,10 @@ Mesh::Mesh(vector<GLfloat> &vertex, vector<int> &&attribute, GLenum render_mode,
 
 Mesh::~Mesh()
 {
+    if (use_texture) this->texture.clear();
 
+    this->vertex.clear();
+    this->vertex.shrink_to_fit();
 }
 
 METHOD Mesh::method()
