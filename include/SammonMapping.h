@@ -19,12 +19,16 @@ private:
     vector<GLfloat> _vertex;
 
     float norm_2(vector<float> p1, vector<float> p2);
+    void normalize();
     void kmeans(int group);
-    void load_data();
+    void calculate_distance();
+    void load_custom(string filename);
+    void load_scalar();
     glm::vec2 descent(float lambda, glm::ivec2 index, vector<glm::vec2> &mapping_point);
 
 public:
     SammonMapping();
+    SammonMapping(string filename);
     SammonMapping(string inf_file, string raw_file);
     ~SammonMapping();
 

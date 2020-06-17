@@ -244,7 +244,7 @@ void save_transfer_table(string filename, vector<vector<float>> &color, vector<v
     cout << "==============================================" << '\n';
 }
 
-void WindowManagement::load(string filename, METHOD method, bool update)
+void WindowManagement::load(string filename, METHOD method, bool update, bool custom)
 {
     string base = "./Data/";
 
@@ -352,9 +352,17 @@ void WindowManagement::load(string filename, METHOD method, bool update)
             case METHOD::SAMMONMAPPING: {
                 cout << "Method: " << "Sammon Mapping" << '\n';
 
-                filename = base + "Scalar/" + filename;
+                SammonMapping sammon_mapping;
 
-                SammonMapping sammon_mapping(filename + ".inf", filename + ".raw");
+                if (custom) {
+                    filename = base + "Custom/" + filename;
+                    sammon_mapping = SammonMapping(filename + ".txt");
+                }
+                else {
+                    filename = base + "Scalar/" + filename;
+                    sammon_mapping = SammonMapping(filename + ".inf", filename + ".raw");
+                }
+
                 sammon_mapping.run(0.3);
 
                 Mesh temp_mesh(sammon_mapping, METHOD::SAMMONMAPPING);
@@ -373,7 +381,12 @@ void WindowManagement::load(string filename, METHOD method, bool update)
     if (update == false) cout << "==============================================" << '\n';
 }
 
-void generate_combo(map<string, METHOD> &methods, vector<string> &scalar_files, vector<string> &vector_files)
+void generate_combo(
+    map<string, METHOD> &methods,
+    vector<string> &scalar_files,
+    vector<string> &custom_files,
+    vector<string> &vector_files
+)
 {
     // generate methods combo
     methods["Iso Surface"] = METHOD::ISOSURFACE;
@@ -394,7 +407,9 @@ void generate_combo(map<string, METHOD> &methods, vector<string> &scalar_files, 
         }
     }
 
-    sort(scalar_files.begin(), scalar_files.end());
+    // generate custom files
+    custom_files.push_back("iris");
+    custom_files.push_back("grade");
 
     // generate vector files combo
     if ((dp = opendir("./Data/Vector")) != NULL) {
@@ -444,8 +459,13 @@ void WindowManagement::gui()
     static string scalar_file = "engine";
     static vector<string> scalar_files;
 
+    static string custom_file = "iris";
+    static vector<string> custom_files;
+
     static string vector_file = "1.vec";
     static vector<string> vector_files;
+
+    static int current_data = 0;
 
     static bool equalization = false;
 
@@ -460,7 +480,7 @@ void WindowManagement::gui()
     static vector<vector<float>> alpha(256, vector<float>(size, 0.0));
 
     if (first_time) {
-        generate_combo(methods, scalar_files, vector_files);
+        generate_combo(methods, scalar_files, custom_files, vector_files);
         first_time = false;
     }
 
@@ -483,15 +503,36 @@ void WindowManagement::gui()
         ImGui::EndCombo();
     }
 
-    if (method == "Iso Surface" || method == "Slicing" || method == "Sammon Mapping") {
-        if (ImGui::BeginCombo("## Scalar Files", scalar_file.c_str())) {
-            for (size_t i = 0; i < scalar_files.size(); i++) {
-                bool selected = (scalar_file == scalar_files[i]);
+    if (method != "Sammon Mapping") current_data = 0;
+    else {
+        // select data
+        ImGui::RadioButton("Scalar Data", &current_data, 0);
+        ImGui::SameLine();
+        ImGui::RadioButton("Custom Data", &current_data, 1);
+    }
 
-                if (ImGui::Selectable(scalar_files[i].c_str(), selected)) scalar_file = scalar_files[i];
-                if (selected) ImGui::SetItemDefaultFocus();
+    if (method == "Iso Surface" || method == "Slicing" || method == "Sammon Mapping") {
+        if (current_data == 0) {
+            if (ImGui::BeginCombo("## Scalar Files", scalar_file.c_str())) {
+                for (size_t i = 0; i < scalar_files.size(); i++) {
+                    bool selected = (scalar_file == scalar_files[i]);
+
+                    if (ImGui::Selectable(scalar_files[i].c_str(), selected)) scalar_file = scalar_files[i];
+                    if (selected) ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
             }
-            ImGui::EndCombo();
+        }
+        else if (current_data == 1) {
+            if (ImGui::BeginCombo("## Custom Files", custom_file.c_str())) {
+                for (size_t i = 0; i < custom_files.size(); i++) {
+                    bool selected = (custom_file == custom_files[i]);
+
+                    if (ImGui::Selectable(custom_files[i].c_str(), selected)) custom_file = custom_files[i];
+                    if (selected) ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
         }
     }
     else if (method == "Stream Line") {
@@ -522,10 +563,20 @@ void WindowManagement::gui()
 
         current_method = methods[method];
         if (current_method == METHOD::STREAMLINE) {
-            this->load(vector_file, current_method, false);
+            this->load(vector_file, current_method, false, false);
+        }
+        else if (current_method == METHOD::SAMMONMAPPING) {
+            if (current_data == 0) {
+                // Scalar Data
+                this->load(scalar_file, current_method, false, false);
+            }
+            else if (current_data == 1) {
+                // Custom Data
+                this->load(custom_file, current_method, false, true);
+            }
         }
         else {
-            this->load(scalar_file, current_method, false);
+            this->load(scalar_file, current_method, false, false);
         }
         
     }
@@ -690,7 +741,7 @@ void WindowManagement::gui()
     }
 
     if (current_method == METHOD::SLICING) {
-        this->load(scalar_file, current_method, true);
+        this->load(scalar_file, current_method, true, false);
     }
 }
 
