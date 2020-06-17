@@ -98,5 +98,5 @@ attribute:
 render_mode:
     override parent class virtual function, get render mode let will use in glDrawArrays
     - return:
-        (GLenum): return GL_LINES, value should be [GL_TRIANGLES, GL_LINES, ...]
+        (GLenum): return GL_POINTS, value should be [GL_TRIANGLES, GL_LINES, GL_POINTS, ...]
 ```

@@ -55,6 +55,11 @@ IsoSurface:
 run:
     calculate iso surface triangles' vertices
 
+shape:
+    override parent class virtual function, get shape let will be shift result
+    - return:
+        (glm::vec3): return data shape
+
 vertex:
     override parent class virtual function, get vertices let will be render
     - return:

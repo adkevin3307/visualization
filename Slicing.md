@@ -92,6 +92,11 @@ texture_3d_shape:
     - return:
         (glm::ivec3): return amount of _texture_3d element (per element is 4 float), shape should be (x, y, z)
 
+shape:
+    override parent class virtual function, get shape let will be shift result
+    - return:
+        (glm::vec3): return data shape
+
 vertex:
     override parent class virtual function, get vertices let will be render
     - return:

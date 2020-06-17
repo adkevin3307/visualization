@@ -30,7 +30,7 @@ SammonMapping::~SammonMapping()
 
 }
 
-float SammonMapping::norm_2(vector<float> p1, vector<float> p2)
+float SammonMapping::distance(vector<float> p1, vector<float> p2)
 {
     float result = 0;
 
@@ -97,7 +97,7 @@ void SammonMapping::kmeans(int group)
             float min_distance;
 
             for (size_t j = 0; j < group_center.size(); j++) {
-                float temp = this->norm_2(group_center[j], this->data[i]);
+                float temp = this->distance(group_center[j], this->data[i]);
 
                 if (j == 0 || temp < min_distance) {
                     min_distance = temp;
@@ -141,7 +141,7 @@ void SammonMapping::calculate_distance()
 
     for (size_t i = 0; i < this->data.size(); i++) {
         for (size_t j = i + 1; j < this->data.size(); j++) {
-            this->_distance[i][j] = this->_distance[j][i] = this->norm_2(this->data[i], this->data[j]);
+            this->_distance[i][j] = this->_distance[j][i] = this->distance(this->data[i], this->data[j]);
         }
     }
 
@@ -213,9 +213,9 @@ glm::vec2 SammonMapping::descent(float lambda, glm::ivec2 index, vector<glm::vec
 {
     float true_distance;
     if (this->_distance.size() != 0) true_distance = this->_distance[index.x][index.y];
-    else true_distance = this->norm_2(this->data[index.x], this->data[index.y]);
+    else true_distance = this->distance(this->data[index.x], this->data[index.y]);
 
-    float mapping_distance = this->norm_2(
+    float mapping_distance = this->distance(
         vector<float>{mapping_point[index.x].x, mapping_point[index.x].y},
         vector<float>{mapping_point[index.y].x, mapping_point[index.y].y}
     );
@@ -286,7 +286,6 @@ void SammonMapping::run(float alpha)
         this->_vertex.push_back(color[this->label[i]].x);
         this->_vertex.push_back(color[this->label[i]].y);
         this->_vertex.push_back(color[this->label[i]].z);
-        this->_vertex.push_back(1.0);
     }
 
     cout << "vertex size: " << this->_vertex.size() << '\n';
@@ -304,7 +303,7 @@ vector<GLfloat>& SammonMapping::vertex()
 
 vector<int> SammonMapping::attribute()
 {
-    return vector<int>{2, 4};
+    return vector<int>{2, 3};
 }
 
 GLenum SammonMapping::render_mode()

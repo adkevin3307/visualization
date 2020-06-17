@@ -18,7 +18,7 @@ private:
     vector<vector<float>> data, _distance;
     vector<GLfloat> _vertex;
 
-    float norm_2(vector<float> p1, vector<float> p2);
+    float distance(vector<float> p1, vector<float> p2);
     void normalize();
     void kmeans(int group);
     void calculate_distance();
