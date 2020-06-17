@@ -165,20 +165,18 @@ vector<GLfloat> StreamLine::calculate(glm::vec2 position, float delta, int scale
         position = temp;
     }
 
-    if (result.size() != 0) {
-        if (delta >= 0) {
-            int count = 0;
-            for (size_t i = 6; i < result.size(); i += 7) {
-                result[i] = max(1.0, 3.0 / ((count / 5.0) + 1));
-                count += 1;
+    if (result.size() != 0 && delta < 0) {
+        int count = 0;
+        for (size_t i = 0; i < result.size() / 2; i += 7) {
+            for (auto delta = 0; delta < 7; delta++) {
+                GLfloat temp;
+                int back_index = result.size() - (count + 1) * 7;
+
+                temp = result[i + delta];
+                result[i + delta] = result[back_index + delta];
+                result[back_index + delta] = temp;
             }
-        }
-        else {
-            int count = 0;
-            for (int i = result.size() - 1; i >= 0; i -= 7) {
-                result[i] = max(1.0, 3.0 / ((count / 5.0) + 1));
-                count += 1;
-            }
+            count += 1;
         }
     }
 
@@ -202,11 +200,23 @@ void StreamLine::run()
                     start.x = (((float)i + 0.5) / (float)this->tables[scale].size()) * (float)this->data.size();
                     start.y = (((float)j + 0.5) / (float)this->tables[scale][i].size()) * (float)this->data[i].size();
 
-                    vector<GLfloat> line = this->calculate(start, 0.1, scale);
+                    vector<GLfloat> front_line = this->calculate(start, 0.1, scale);
                     vector<GLfloat> back_line = this->calculate(start, -0.1, scale);
 
-                    if (line.size() >= 0) this->_vertex.insert(this->_vertex.end(), line.begin(), line.end());
-                    if (back_line.size() > 0) this->_vertex.insert(this->_vertex.end(), back_line.begin(), back_line.end());
+                    vector<GLfloat> line;
+
+                    if (back_line.size() > 0) line.insert(line.end(), back_line.begin(), back_line.end());
+                    if (front_line.size() > 0) line.insert(line.end(), front_line.begin(), front_line.end());
+
+                    if (line.size() > 0) {
+                        int count = 0;
+                        for (size_t line_index = 6; line_index < line.size(); line_index += 7) {
+                            line[line_index] = max(1.0, 3.0 / ((count / 10.0) + 1));
+                            count += 1;
+                        }
+
+                        this->_vertex.insert(this->_vertex.end(), line.begin(), line.end());
+                    }
                 }
             }
         }
