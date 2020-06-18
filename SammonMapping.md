@@ -8,7 +8,7 @@ class `SammonMapping` is inheriting from class `Method`
 ## Special
 * use kmeans to auto divide group
 
-## Dillemma
+## Dilemma
 * if amount of data greater than 1000, `Sammon Mapping` will need a lot of time
 
 ## Member
