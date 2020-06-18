@@ -21,6 +21,7 @@
 #include "StreamLine.h"
 #include "SammonMapping.h"
 #include "Transformation.h"
+#include "MeshManagement.h"
 
 using namespace std;
 
@@ -265,7 +266,8 @@ void WindowManagement::load(string filename, METHOD method, bool update, bool cu
                 Mesh temp_mesh(iso_surface, METHOD::ISOSURFACE);
                 temp_mesh.init();
 
-                this->mesh.push_back(temp_mesh);
+                // this->mesh.push_back(temp_mesh);
+                MeshManagement::add(temp_mesh);
 
                 break;
             }
@@ -586,29 +588,22 @@ void WindowManagement::gui()
         current_method = METHOD::NONE;
 
         if (showed) {
-            if (mesh.size() != 0) {
-                this->mesh.clear();
-            }
-            else {
-                showed = false;
+            showed = false;
 
-                for (size_t i = 0; i < color.size(); i++) {
-                    fill(color[i].begin(), color[i].end(), 0.0);
-                }
-
-                for (size_t i = 0; i < alpha.size(); i++) {
-                    fill(alpha[i].begin(), alpha[i].end(), 0.0);
-                }
-            }
+            this->mesh.clear();
         }
-        else if ((!showed) && loaded) {
+        else if (loaded) {
             loaded = false;
 
-            histogram.clear();
-
-            for (size_t i = 0; i < distribution.size(); i++) {
-                distribution[i].clear();
+            for (size_t i = 0; i < color.size(); i++) {
+                fill(color[i].begin(), color[i].end(), 0.0);
             }
+
+            for (size_t i = 0; i < alpha.size(); i++) {
+                fill(alpha[i].begin(), alpha[i].end(), 0.0);
+            }
+
+            histogram.clear();
             distribution.clear();
         }
     }
@@ -838,19 +833,21 @@ void WindowManagement::main_loop()
 
         this->gui();
 
-        for (size_t i = 0; i < this->mesh.size(); i++) {
-            Transformation transformation(this->shader_map[this->mesh[i].method()]);
-            transformation.set_projection(WIDTH, HEIGHT, this->rate, 0.0, 500.0);
-            transformation.set_view(this->camera.view_matrix());
+        MeshManagement::draw(this->shader_map, this->camera.view_matrix(), this->rate);
 
-            this->mesh[i].transform(transformation);
-            transformation.set();
+        // for (size_t i = 0; i < this->mesh.size(); i++) {
+        //     Transformation transformation(this->shader_map[this->mesh[i].method()]);
+        //     transformation.set_projection(WIDTH, HEIGHT, this->rate, 0.0, 500.0);
+        //     transformation.set_view(this->camera.view_matrix());
 
-            if (this->mesh[i].method() == METHOD::ISOSURFACE) {
-                this->shader_map[this->mesh[i].method()].set_uniform("object_color", glm::vec4(0.41, 0.37, 0.89, 1.0));
-            }
-            this->mesh[i].draw(GL_FILL);
-        }
+        //     this->mesh[i].transform(transformation);
+        //     transformation.set();
+
+        //     if (this->mesh[i].method() == METHOD::ISOSURFACE) {
+        //         this->shader_map[this->mesh[i].method()].set_uniform("object_color", glm::vec4(0.41, 0.37, 0.89, 1.0));
+        //     }
+        //     this->mesh[i].draw(GL_FILL);
+        // }
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
