@@ -1,7 +1,5 @@
 #include "MeshManagement.h"
 
-#include "constant.h"
-
 #include "Transformation.h"
 
 using namespace std;
@@ -15,26 +13,26 @@ void MeshManagement::add(Mesh &rhs)
     MeshManagement::mesh.push_back(rhs);
 }
 
-void MeshManagement::update(glm::vec3 view_position)
+void MeshManagement::update(glm::vec3 view_position, METHOD method)
 {
-    int max_index;
-    glm::vec3 temp = glm::vec3(abs(view_position[0]), abs(view_position[1]), abs(view_position[2]));
+    int max_arg_index;
+    glm::vec3 temp = glm::abs(view_position);
 
-    if (temp[0] >= temp[1] && temp[0] >= temp[2]) max_index = 0;
-    if (temp[1] > temp[0] && temp[1] >= temp[2]) max_index = 1;
-    if (temp[2] > temp[0] && temp[2] > temp[1]) max_index = 2;
+    if (temp[0] >= temp[1] && temp[0] >= temp[2]) max_arg_index = 0;
+    if (temp[1] > temp[0] && temp[1] >= temp[2]) max_arg_index = 1;
+    if (temp[2] > temp[0] && temp[2] > temp[1]) max_arg_index = 2;
 
-    int index = max_index * 2 + (view_position[max_index] >= 0);
+    int index = max_arg_index * 2 + (view_position[max_arg_index] >= 0);
 
-    int count = 0;
     for (size_t i = 0; i < MeshManagement::enable.size(); i++) {
-        if (MeshManagement::mesh[i].method() == METHOD::SLICING) {
-            if (count == index) MeshManagement::enable[i] = true;
-            else MeshManagement::enable[i] = false;
+        MeshManagement::enable[i] = (MeshManagement::mesh[i].method() == method);
 
-            count += 1;
+        if (method == METHOD::SLICING && MeshManagement::mesh[i].method() == METHOD::SLICING) {
+            for (auto count = 0; count < 6; count++) {
+                MeshManagement::enable[i + count] = (count == index);
+            }
+            i += 5;
         }
-        else count = 0;
     }
 }
 

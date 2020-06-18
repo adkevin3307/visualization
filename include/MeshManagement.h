@@ -1,5 +1,7 @@
 #pragma once
 
+#include "constant.h"
+
 #include <glm/glm.hpp>
 #include <vector>
 #include <map>
@@ -16,7 +18,7 @@ private:
 
 public:
     static void add(Mesh &rhs);
-    static void update(glm::vec3 view_position);
+    static void update(glm::vec3 view_position, METHOD method);
     static void draw(map<METHOD, Shader> &shader_map, glm::mat4 view_matrix, double rate);
     static void clear();
 };

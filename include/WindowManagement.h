@@ -15,9 +15,12 @@ using namespace std;
 
 class WindowManagement {
 private:
+    int files_index;
     double last_xpos, last_ypos, rate;
     Camera camera;
     map<METHOD, Shader> shader_map;
+    map<string, METHOD> methods;
+    vector<vector<string>> files;
     GLFWwindow *window;
 
     static void error_callback(int error, const char *description);
@@ -28,6 +31,7 @@ private:
 
     void set_callback();
 
+    void generate_combo();
     void load(string filename, METHOD method, bool custom);
     void gui();
 

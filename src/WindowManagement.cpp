@@ -26,8 +26,10 @@
 using namespace std;
 
 WindowManagement::WindowManagement()
-    : last_xpos(0.0), last_ypos(0.0), rate(7.0)
+    : files_index(0), last_xpos(0.0), last_ypos(0.0), rate(7.0)
 {
+    this->files.resize(3);
+    this->generate_combo();
 }
 
 WindowManagement::~WindowManagement()
@@ -377,18 +379,13 @@ void WindowManagement::load(string filename, METHOD method, bool custom)
     cout << "==============================================" << '\n';
 }
 
-void generate_combo(
-    map<string, METHOD> &methods,
-    vector<string> &scalar_files,
-    vector<string> &custom_files,
-    vector<string> &vector_files
-)
+void WindowManagement::generate_combo()
 {
     // generate methods combo
-    methods["Iso Surface"] = METHOD::ISOSURFACE;
-    methods["Slicing"] = METHOD::SLICING;
-    methods["Stream Line"] = METHOD::STREAMLINE;
-    methods["Sammon Mapping"] = METHOD::SAMMONMAPPING;
+    this->methods["Iso Surface"] = METHOD::ISOSURFACE;
+    this->methods["Slicing Method"] = METHOD::SLICING;
+    this->methods["Stream Line"] = METHOD::STREAMLINE;
+    this->methods["Sammon Mapping"] = METHOD::SAMMONMAPPING;
 
     // generate scalar files combo
     DIR *dp;
@@ -399,22 +396,22 @@ void generate_combo(
             string temp = dirp->d_name;
             size_t index = temp.find(".inf");
 
-            if (index != string::npos) scalar_files.push_back(temp.substr(0, index));
+            if (index != string::npos) this->files[0].push_back(temp.substr(0, index));
         }
     }
-
-    // generate custom files
-    custom_files.push_back("iris");
-    custom_files.push_back("grade");
 
     // generate vector files combo
     if ((dp = opendir("./Data/Vector")) != NULL) {
         while ((dirp = readdir(dp)) != NULL) {
             string temp = dirp->d_name;
 
-            if (temp.find("vec") != string::npos) vector_files.push_back(temp);
+            if (temp.find("vec") != string::npos) this->files[1].push_back(temp);
         }
     }
+
+    // generate custom files
+    this->files[2].push_back("iris");
+    this->files[2].push_back("grade");
 }
 
 double gaussian(double mu, double sigma, double value)
@@ -446,25 +443,13 @@ void WindowManagement::gui()
 {
     static bool loaded = false;
     static bool showed = false;
-    static bool first_time = true;
 
     static METHOD current_method = METHOD::NONE;
 
     static double size = 20.0 * log2(MAX_GRADIENT_MAGNITUDE) + 1.0;
 
     static string method = "Iso Surface";
-    static map<string, METHOD> methods;
-
-    static string scalar_file = "engine";
-    static vector<string> scalar_files;
-
-    static string custom_file = "iris";
-    static vector<string> custom_files;
-
-    static string vector_file = "1.vec";
-    static vector<string> vector_files;
-
-    static int current_data = 0;
+    static string selected_file = this->files[this->files_index][0];
 
     static bool equalization = false;
 
@@ -478,103 +463,73 @@ void WindowManagement::gui()
     static vector<vector<float>> color(3, vector<float>(256, 0.0));
     static vector<vector<float>> alpha(256, vector<float>(size, 0.0));
 
-    if (first_time) {
-        generate_combo(methods, scalar_files, custom_files, vector_files);
-        first_time = false;
-    }
-
     // set Controller position and size
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Once);
     ImGui::SetNextWindowSize(ImVec2(WIDTH / 3, HEIGHT / 3), ImGuiCond_Once);
-
     // Controller window
     ImGui::Begin("Controller");
     ImGui::SetWindowFontScale(1.2);
 
-    if (ImGui::BeginCombo("## Method", method.c_str())) {
-        for (auto it = methods.begin(); it != methods.end(); it++) {
+    if (ImGui::BeginCombo("## Methods", method.c_str())) {
+        string old_method = method;
+
+        for (auto it = this->methods.begin(); it != this->methods.end(); it++) {
             bool selected = (method == it->first);
 
             if (ImGui::Selectable(it->first.c_str(), selected)) method = it->first;
             if (selected) ImGui::SetItemDefaultFocus();
         }
 
+        if (old_method != method) {
+            if (method == "Iso Surface" || method == "Slicing Method" || method == "Sammon Mapping") this->files_index = 0;
+            else if (method == "Stream Line") this->files_index = 1;
+
+            selected_file = this->files[this->files_index][0];
+        }
         ImGui::EndCombo();
     }
 
-    if (method != "Sammon Mapping") current_data = 0;
-    else {
+    if (method == "Sammon Mapping") {
         // select data
-        ImGui::RadioButton("Scalar Data", &current_data, 0);
+        if (ImGui::RadioButton("Scalar Data", &(this->files_index), 0)) {
+            selected_file = this->files[this->files_index][0];
+        }
         ImGui::SameLine();
-        ImGui::RadioButton("Custom Data", &current_data, 1);
-    }
-
-    if (method == "Iso Surface" || method == "Slicing" || method == "Sammon Mapping") {
-        if (current_data == 0) {
-            if (ImGui::BeginCombo("## Scalar Files", scalar_file.c_str())) {
-                for (size_t i = 0; i < scalar_files.size(); i++) {
-                    bool selected = (scalar_file == scalar_files[i]);
-
-                    if (ImGui::Selectable(scalar_files[i].c_str(), selected)) scalar_file = scalar_files[i];
-                    if (selected) ImGui::SetItemDefaultFocus();
-                }
-                ImGui::EndCombo();
-            }
-        }
-        else if (current_data == 1) {
-            if (ImGui::BeginCombo("## Custom Files", custom_file.c_str())) {
-                for (size_t i = 0; i < custom_files.size(); i++) {
-                    bool selected = (custom_file == custom_files[i]);
-
-                    if (ImGui::Selectable(custom_files[i].c_str(), selected)) custom_file = custom_files[i];
-                    if (selected) ImGui::SetItemDefaultFocus();
-                }
-                ImGui::EndCombo();
-            }
-        }
-    }
-    else if (method == "Stream Line") {
-        if (ImGui::BeginCombo("## Vector Files", vector_file.c_str())) {
-            for (size_t i = 0; i < vector_files.size(); i++) {
-                bool selected = (vector_file == vector_files[i]);
-
-                if (ImGui::Selectable(vector_files[i].c_str(), selected)) vector_file = vector_files[i];
-                if (selected) ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
+        if (ImGui::RadioButton("Custom Data", &(this->files_index), 2)) {
+            selected_file = this->files[this->files_index][0];
         }
     }
 
-    if (method == "Iso Surface" || method == "Slicing") {
+    if (ImGui::BeginCombo("## Files", selected_file.c_str())) {
+        for (auto it = this->files[this->files_index].begin(); it != this->files[this->files_index].end(); it++) {
+            bool selected = (selected_file == *it);
+
+            if (ImGui::Selectable((*it).c_str(), selected)) selected_file = *it;
+            if (selected) ImGui::SetItemDefaultFocus();
+        }
+
+        ImGui::EndCombo();
+    }
+
+    if (method == "Iso Surface" || method == "Slicing Method") {
         ImGui::Checkbox("Equalization", &equalization);
 
-        if (ImGui::Button("Load")) {
+        if (!loaded && ImGui::Button("Load")) {
             loaded = true;
 
-            load_volume(scalar_file, histogram, distribution, equalization);
+            load_volume(selected_file, histogram, distribution, equalization);
         }
-        ImGui::SameLine();
     }
 
     if ((loaded || method == "Stream Line" || method == "Sammon Mapping") && ImGui::Button("Show")) {
         showed = true;
 
-        if (method == "Slicing") {
-            save_transfer_table(scalar_file, color, alpha, equalization);
+        if (method == "Slicing Method") {
+            save_transfer_table(selected_file, color, alpha, equalization);
         }
 
-        current_method = methods[method];
-        if (current_method == METHOD::STREAMLINE) {
-            this->load(vector_file, current_method, false);
-        }
-        else if (current_method == METHOD::SAMMONMAPPING && current_data == 1) {
-            this->load(custom_file, current_method, true);
-        }
-        else {
-            this->load(scalar_file, current_method, false);
-        }
-        
+        current_method = this->methods[method];
+        this->load(selected_file, current_method, (this->files_index == 2));
     }
     ImGui::SameLine();
 
@@ -602,7 +557,7 @@ void WindowManagement::gui()
         }
     }
 
-    if (method == "Iso Surface" || method == "Slicing") {
+    if (method == "Iso Surface" || method == "Slicing Method") {
         // select color
         ImGui::RadioButton("Red", &current_color, 0);
         ImGui::SameLine();
@@ -611,7 +566,7 @@ void WindowManagement::gui()
         ImGui::RadioButton("Blue", &current_color, 2);
     }
 
-    if (method == "Iso Surface" || method == "Slicing") {
+    if (method == "Iso Surface" || method == "Slicing Method") {
         ImGui::SetWindowFontScale(1.0);
         ImGui::SliderFloat3("Clip Plane Normal", clip_normal, -1.0, 1.0);
         ImGui::SliderFloat("Clip Plane Distanse", &clip_distance, -150.0, 150.0);
@@ -635,24 +590,26 @@ void WindowManagement::gui()
         ImPlot::SetNextPlotLimitsY(0.0, 1.1, ImGuiCond_Always, 1);
         if (ImPlot::BeginPlot("## RGB", "Intensity", "Amount", plot_size, plot_flag)) {
             ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(128, 128, 128, 255));
-            ImPlot::PlotBars(scalar_file.c_str(), histogram.data(), histogram.size());
+            ImPlot::PlotBars(selected_file.c_str(), histogram.data(), histogram.size());
 
-            if (ImPlot::IsPlotHovered() && ImGui::IsMouseClicked(0)) {
+            if (ImPlot::IsPlotHovered() && ImGui::IsWindowFocused() && ImGui::IsAnyMouseDown()) {
                 ImPlotPoint point = ImPlot::GetPlotMousePos();
 
-                for (auto i = 0; i < 256; i++) {
-                    color[current_color][i] += gaussian(point.x, 10.0, i);
-                    color[current_color][i] = min(1.0f, color[current_color][i]);
+                double delta, sigma;
+                if (ImGui::IsMouseDown(0)) {
+                    delta = 1.0;
+                    sigma = 10.0;
                 }
-            }
-
-            if (ImPlot::IsPlotHovered() && ImGui::IsMouseClicked(1)) {
-                ImPlotPoint point = ImPlot::GetPlotMousePos();
+                if (ImGui::IsMouseDown(1)) {
+                    delta = -1.0;
+                    sigma = 5.0;
+                }
 
                 for (auto i = 0; i < 256; i++) {
-                    color[current_color][i] -= gaussian(point.x, 5.0, i);
-                    color[current_color][i] = max(0.0f, color[current_color][i]);
+                    color[current_color][i] += gaussian(point.x, sigma, i) * delta;
+                    color[current_color][i] = min(1.0f, max(0.0f, color[current_color][i]));
                 }
+
             }
 
             ImPlot::SetPlotYAxis(1);
@@ -669,8 +626,12 @@ void WindowManagement::gui()
         // distribution
         ImPlot::SetNextPlotLimits(0.0, 256.0, 0.0, size, ImGuiCond_Always);
         if (ImPlot::BeginPlot("Distribution", "Intensity", "Gradient Magnitude", plot_size, plot_flag)) {
-            if (ImGui::IsWindowFocused() && ImGui::IsMouseDown(0)) {
+            if (ImGui::IsWindowFocused() && ImGui::IsAnyMouseDown()) {
                 ImPlotPoint point = ImPlot::GetPlotMousePos();
+
+                double delta;
+                if (ImGui::IsMouseDown(0)) delta = 1.0;
+                if (ImGui::IsMouseDown(1)) delta = -1.0;
 
                 for (size_t i = 0; i < alpha.size(); i++) {
                     for (size_t j = 0; j < alpha[i].size(); j++) {
@@ -678,23 +639,8 @@ void WindowManagement::gui()
                             glm::vec2(point.x, point.y),
                             glm::vec2(10.0, 10.0),
                             glm::vec2(i, j)
-                        );
-                        alpha[i][j] = min(1.0f, alpha[i][j]);
-                    }
-                }
-            }
-
-            if (ImGui::IsWindowFocused() && ImGui::IsMouseDown(1)) {
-                ImPlotPoint point = ImPlot::GetPlotMousePos();
-
-                for (size_t i = 0; i < alpha.size(); i++) {
-                    for (size_t j = 0; j < alpha[i].size(); j++) {
-                        alpha[i][j] -= gaussian_2d(
-                            glm::vec2(point.x, point.y),
-                            glm::vec2(10.0, 10.0),
-                            glm::vec2(i, j)
-                        );
-                        alpha[i][j] = max(0.0f, alpha[i][j]);
+                        ) * delta;
+                        alpha[i][j] = min(1.0f, max(0.0f, alpha[i][j]));
                     }
                 }
             }
@@ -725,22 +671,18 @@ void WindowManagement::gui()
         ImGui::End();
     }
 
-    if (method != "Stream Line" && method != "Sammon Mapping") {
+    if (current_method == METHOD::ISOSURFACE || current_method == METHOD::SLICING) {
         glm::vec3 temp = glm::make_vec3(clip_normal);
         if (glm::length(temp) > EPSILON) temp = glm::normalize(temp);
         glm::vec4 clip_plane = glm::vec4(temp, clip_distance);
 
-        if (current_method != METHOD::NONE) {
-            this->shader_map[current_method].set_uniform("clip_plane", clip_plane);
-            this->shader_map[current_method].set_uniform("view_pos", this->camera.position());
-            this->shader_map[current_method].set_uniform("light_pos", this->camera.position());
-            this->shader_map[current_method].set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
-        }
+        this->shader_map[current_method].set_uniform("clip_plane", clip_plane);
+        this->shader_map[current_method].set_uniform("view_pos", this->camera.position());
+        this->shader_map[current_method].set_uniform("light_pos", this->camera.position());
+        this->shader_map[current_method].set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));
     }
 
-    if (current_method == METHOD::SLICING) {
-        MeshManagement::update(this->camera.position());
-    }
+    MeshManagement::update(this->camera.position(), current_method);
 }
 
 void WindowManagement::init()
