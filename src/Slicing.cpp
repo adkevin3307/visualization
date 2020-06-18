@@ -159,28 +159,9 @@ void Slicing::calculate()
     }
 }
 
-int compare(glm::vec3 view_position)
+void Slicing::run(int index)
 {
-    glm::vec3 temp = glm::vec3(abs(view_position[0]), abs(view_position[1]), abs(view_position[2]));
-
-    if (temp[0] >= temp[1] && temp[0] >= temp[2]) return 0;
-    if (temp[1] > temp[0] && temp[1] >= temp[2]) return 1;
-    if (temp[2] > temp[0] && temp[2] > temp[1]) return 2;
-
-    return -1;
-}
-
-bool Slicing::run(glm::vec3 view_position)
-{
-    int max_index = compare(view_position);
-    int temp = max_index * 2 + (view_position[max_index] >= 0);
-
-    if (this->_index == -1 || this->_index != temp) {
-        this->_index = temp;
-        return true;
-    }
-
-    return false;
+    this->_index = index;
 }
 
 vector<float>& Slicing::texture_2d()

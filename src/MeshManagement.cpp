@@ -34,8 +34,7 @@ void MeshManagement::update(glm::vec3 view_position)
 
             count += 1;
         }
-
-        count %= 6;
+        else count = 0;
     }
 }
 
@@ -61,4 +60,5 @@ void MeshManagement::draw(map<METHOD, Shader> &shader_map, glm::mat4 view_matrix
 void MeshManagement::clear()
 {
     MeshManagement::mesh.clear();
+    MeshManagement::enable.clear();
 }
