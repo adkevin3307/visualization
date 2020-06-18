@@ -1,4 +1,4 @@
-# IsoSurface Method
+# Sammon Mapping
 class `SammonMapping` is inheriting from class `Method`
 
 ## Explain
