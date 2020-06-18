@@ -10,7 +10,6 @@
 
 #include "Camera.h"
 #include "Shader.h"
-#include "Mesh.h"
 
 using namespace std;
 
@@ -19,7 +18,6 @@ private:
     double last_xpos, last_ypos, rate;
     Camera camera;
     map<METHOD, Shader> shader_map;
-    vector<Mesh> mesh;
     GLFWwindow *window;
 
     static void error_callback(int error, const char *description);
@@ -30,7 +28,7 @@ private:
 
     void set_callback();
 
-    void load(string filename, METHOD method, bool update, bool custom);
+    void load(string filename, METHOD method, bool custom);
     void gui();
 
 public:

@@ -20,7 +20,8 @@
 #include "Slicing.h"
 #include "StreamLine.h"
 #include "SammonMapping.h"
-#include "Transformation.h"
+#include "Mesh.h"
+#include "MeshManagement.h"
 
 using namespace std;
 
@@ -244,11 +245,11 @@ void save_transfer_table(string filename, vector<vector<float>> &color, vector<v
     cout << "==============================================" << '\n';
 }
 
-void WindowManagement::load(string filename, METHOD method, bool update, bool custom)
+void WindowManagement::load(string filename, METHOD method, bool custom)
 {
     string base = "./Data/";
 
-    if (update == false) cout << "==================== Load ====================" << '\n';
+    cout << "==================== Load ====================" << '\n';
 
     this->shader_map[method].use();
 
@@ -265,20 +266,18 @@ void WindowManagement::load(string filename, METHOD method, bool update, bool cu
                 Mesh temp_mesh(iso_surface, METHOD::ISOSURFACE);
                 temp_mesh.init();
 
-                this->mesh.push_back(temp_mesh);
+                MeshManagement::add(temp_mesh);
 
                 break;
             }
             case (METHOD::SLICING): {
-                static Slicing slicing;
+                cout << "Method: " << "Slicing Method" << '\n';
 
-                if (update == false) {
-                    cout << "Method: " << "Slicing Method" << '\n';
+                filename = base + "Scalar/" + filename;
 
-                    filename = base + "Scalar/" + filename;
-
-                    slicing = Slicing(filename + ".inf", filename + ".raw");
-                    slicing.run(this->camera.position());
+                Slicing slicing(filename + ".inf", filename + ".raw");
+                for (auto i = 0; i < 6; i++) {
+                    slicing.run(i);
 
                     Mesh temp_mesh(slicing, METHOD::SLICING);
                     temp_mesh.enable_texture(2);
@@ -288,12 +287,7 @@ void WindowManagement::load(string filename, METHOD method, bool update, bool cu
                     temp_mesh.set_texture(0, slicing.texture_2d(), slicing.texture_2d_shape());
                     temp_mesh.set_texture(1, slicing.texture_3d(), slicing.texture_3d_shape());
 
-                    this->mesh.push_back(temp_mesh);
-                }
-
-                if (slicing.run(this->camera.position())) {
-                    this->mesh.back().set_vertex(slicing.vertex());
-                    this->mesh.back().init();
+                    MeshManagement::add(temp_mesh);
                 }
 
                 break;
@@ -340,12 +334,12 @@ void WindowManagement::load(string filename, METHOD method, bool update, bool cu
                 Mesh border_mesh(border, vector<int>{2, 4, 1}, GL_LINES, shape, METHOD::STREAMLINE);
                 border_mesh.init();
 
-                this->mesh.push_back(border_mesh);
+                MeshManagement::add(border_mesh);
 
                 Mesh temp_mesh(stream_line, METHOD::STREAMLINE);
                 temp_mesh.init();
 
-                this->mesh.push_back(temp_mesh);
+                MeshManagement::add(temp_mesh);
 
                 break;
             }
@@ -368,7 +362,9 @@ void WindowManagement::load(string filename, METHOD method, bool update, bool cu
                 Mesh temp_mesh(sammon_mapping, METHOD::SAMMONMAPPING);
                 temp_mesh.init();
 
-                this->mesh.push_back(temp_mesh);
+                MeshManagement::add(temp_mesh);
+
+                break;
             }
             default:
                 break;
@@ -378,7 +374,7 @@ void WindowManagement::load(string filename, METHOD method, bool update, bool cu
         cerr << error.what() << '\n';
     }
 
-    if (update == false) cout << "==============================================" << '\n';
+    cout << "==============================================" << '\n';
 }
 
 void generate_combo(
@@ -570,13 +566,13 @@ void WindowManagement::gui()
 
         current_method = methods[method];
         if (current_method == METHOD::STREAMLINE) {
-            this->load(vector_file, current_method, false, false);
+            this->load(vector_file, current_method, false);
         }
         else if (current_method == METHOD::SAMMONMAPPING && current_data == 1) {
-            this->load(custom_file, current_method, false, true);
+            this->load(custom_file, current_method, true);
         }
         else {
-            this->load(scalar_file, current_method, false, false);
+            this->load(scalar_file, current_method, false);
         }
         
     }
@@ -586,29 +582,22 @@ void WindowManagement::gui()
         current_method = METHOD::NONE;
 
         if (showed) {
-            if (mesh.size() != 0) {
-                this->mesh.clear();
-            }
-            else {
-                showed = false;
+            showed = false;
 
-                for (size_t i = 0; i < color.size(); i++) {
-                    fill(color[i].begin(), color[i].end(), 0.0);
-                }
-
-                for (size_t i = 0; i < alpha.size(); i++) {
-                    fill(alpha[i].begin(), alpha[i].end(), 0.0);
-                }
-            }
+            MeshManagement::clear();
         }
-        else if ((!showed) && loaded) {
+        else if (loaded) {
             loaded = false;
 
-            histogram.clear();
-
-            for (size_t i = 0; i < distribution.size(); i++) {
-                distribution[i].clear();
+            for (size_t i = 0; i < color.size(); i++) {
+                fill(color[i].begin(), color[i].end(), 0.0);
             }
+
+            for (size_t i = 0; i < alpha.size(); i++) {
+                fill(alpha[i].begin(), alpha[i].end(), 0.0);
+            }
+
+            histogram.clear();
             distribution.clear();
         }
     }
@@ -750,7 +739,7 @@ void WindowManagement::gui()
     }
 
     if (current_method == METHOD::SLICING) {
-        this->load(scalar_file, current_method, true, false);
+        MeshManagement::update(this->camera.position());
     }
 }
 
@@ -837,20 +826,7 @@ void WindowManagement::main_loop()
         ImGui::NewFrame();
 
         this->gui();
-
-        for (size_t i = 0; i < this->mesh.size(); i++) {
-            Transformation transformation(this->shader_map[this->mesh[i].method()]);
-            transformation.set_projection(WIDTH, HEIGHT, this->rate, 0.0, 500.0);
-            transformation.set_view(this->camera.view_matrix());
-
-            this->mesh[i].transform(transformation);
-            transformation.set();
-
-            if (this->mesh[i].method() == METHOD::ISOSURFACE) {
-                this->shader_map[this->mesh[i].method()].set_uniform("object_color", glm::vec4(0.41, 0.37, 0.89, 1.0));
-            }
-            this->mesh[i].draw(GL_FILL);
-        }
+        MeshManagement::draw(this->shader_map, this->camera.view_matrix(), this->rate);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

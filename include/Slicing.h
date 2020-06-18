@@ -32,7 +32,7 @@ public:
     Slicing(string inf_file, string raw_file);
     ~Slicing();
 
-    bool run(glm::vec3 view_position);
+    void run(int index);
     vector<float>& texture_2d();
     vector<float>& texture_3d();
     glm::ivec3 texture_2d_shape();
