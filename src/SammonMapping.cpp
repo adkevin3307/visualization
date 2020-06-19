@@ -7,6 +7,7 @@
 #include <random>
 #include <functional>
 #include <fstream>
+#include <algorithm>
 
 using namespace std;
 
@@ -82,13 +83,9 @@ void SammonMapping::kmeans(int group)
 
     random_device device;
     default_random_engine generator = default_random_engine(device());
-    uniform_int_distribution<int> distribution(0, this->data.size() - 1);
-    auto random = bind(distribution, generator);
 
     vector<vector<float>> group_center(group, vector<float>(this->data[0].size()));
-    for (size_t i = 0; i < group_center.size(); i++) {
-        group_center[i] = this->data[random()];
-    }
+    sample(this->data.begin(), this->data.end(), group_center.begin(), this->group, generator);
 
     for (auto times = 0; times < 1000; times++) {
         // divide group
@@ -240,18 +237,20 @@ void SammonMapping::run(float alpha)
         mapping_point[i].y = random();
     }
 
-    vector<glm::vec3> color(this->group, glm::vec3(0.0));
-    if (this->group == 3) {
-        color[0].x = 1.0;
-        color[1].y = 1.0;
-        color[2].z = 1.0;
-    }
-    else {
-        for (size_t i = 0; i < color.size(); i++) {
-            color[i].x = (random() + 1.0) / 2.0;
-            color[i].y = (random() + 1.0) / 2.0;
-            color[i].z = (random() + 1.0) / 2.0;
-        }
+    vector<glm::vec3> color;
+    color.push_back(glm::vec3(1.0, 0.0, 0.0));
+    color.push_back(glm::vec3(0.0, 1.0, 0.0));
+    color.push_back(glm::vec3(0.0, 0.0, 1.0));
+    color.push_back(glm::vec3(1.0, 1.0, 0.0));
+    color.push_back(glm::vec3(1.0, 0.0, 1.0));
+    color.push_back(glm::vec3(0.0, 1.0, 1.0));
+
+    for (auto i = (int)color.size(); i < this->group; i++) {
+        color.push_back(glm::vec3(
+            min(1.0, (random() + 1.0) / 2.0 + 0.3),
+            min(1.0, (random() + 1.0) / 2.0 + 0.3),
+            min(1.0, (random() + 1.0) / 2.0 + 0.3)
+        ));
     }
 
     int times;
