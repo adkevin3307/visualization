@@ -82,7 +82,7 @@ void SammonMapping::kmeans(int group)
     this->label.resize(this->data.size(), 0);
 
     random_device device;
-    default_random_engine generator = default_random_engine(device());
+    mt19937 generator(device());
 
     vector<vector<float>> group_center(group, vector<float>(this->data[0].size()));
     sample(this->data.begin(), this->data.end(), group_center.begin(), this->group, generator);
@@ -173,7 +173,7 @@ void SammonMapping::load_custom(string filename)
 void SammonMapping::load_scalar()
 {
     random_device device;
-    default_random_engine generator = default_random_engine(device());
+    mt19937 generator(device());
     uniform_real_distribution<float> distribution(0, 10000);
     auto random = bind(distribution, generator);
 
@@ -228,7 +228,7 @@ void SammonMapping::run(float alpha)
     vector<glm::vec2> mapping_point(this->data.size(), glm::vec2(0.0));
 
     random_device device;
-    default_random_engine generator = default_random_engine(device());
+    mt19937 generator(device());
     uniform_real_distribution<float> distribution(-1, 1);
     auto random = bind(distribution, generator);
 
