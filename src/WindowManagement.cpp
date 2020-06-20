@@ -215,7 +215,7 @@ void load_volume(string filename, vector<float> &histogram, vector<vector<float>
 
     for (size_t i = 0; i < distribution.size(); i++) {
         for (size_t j = 0; j < distribution[i].size(); j++) {
-            distribution[i][j] = 20 * log2(distribution[i][j]);
+            distribution[i][j] = min(255.0f, 20 * log2(distribution[i][j]));
         }
     }
 }
@@ -247,7 +247,7 @@ void save_transfer_table(string filename, vector<vector<float>> &color, vector<v
     cout << "==============================================" << '\n';
 }
 
-void WindowManagement::load(string filename, METHOD method, bool custom)
+void WindowManagement::load(string filename, METHOD method)
 {
     string base = "./Data/";
 
@@ -350,16 +350,16 @@ void WindowManagement::load(string filename, METHOD method, bool custom)
 
                 SammonMapping sammon_mapping;
 
-                if (custom) {
-                    filename = base + "Custom/" + filename;
-                    sammon_mapping = SammonMapping(filename + ".txt");
-                }
-                else {
+                if (this->files_index == 0) {
                     filename = base + "Scalar/" + filename;
                     sammon_mapping = SammonMapping(filename + ".inf", filename + ".raw");
                 }
+                if (this->files_index == 2) {
+                    filename = base + "Custom/" + filename;
+                    sammon_mapping = SammonMapping(filename + ".txt");
+                }
 
-                sammon_mapping.run(0.3);
+                sammon_mapping.run();
 
                 Mesh temp_mesh(sammon_mapping, METHOD::SAMMONMAPPING);
                 temp_mesh.init();
@@ -420,7 +420,7 @@ double gaussian(double mu, double sigma, double value)
 
     double result = exp(-1 * (value - mu) * (value - mu) / (2 * sigma * sigma));
 
-    return result;
+    return (result < EPSILON ? 0.0 : result);
 }
 
 double gaussian_2d(glm::vec2 mu, glm::vec2 sigma, glm::vec2 value)
@@ -428,15 +428,10 @@ double gaussian_2d(glm::vec2 mu, glm::vec2 sigma, glm::vec2 value)
     if (sigma.x == 0.0 && sigma.y == 0.0) return 0.0;
 
     double coefficient = sqrt(sigma.x * sigma.y);
+    glm::vec2 temp = ((value - mu) * (value - mu)) / (2.0f * sigma * sigma);
+    double result = min(exp(-1 * (temp[0] + temp[1])) / coefficient, 1.0);
 
-    double temp[2];
-    for (auto i = 0; i < 2; i++) {
-        temp[i] = ((value[i] - mu[i]) * (value[i] - mu[i])) / (2 * sigma[i] * sigma[i]);
-    }
-
-    double result = exp(-1 * (temp[0] + temp[1]));
-
-    return min(result / coefficient, 1.0);
+    return (result < EPSILON ? 0.0 : result);
 }
 
 void WindowManagement::gui()
@@ -448,7 +443,7 @@ void WindowManagement::gui()
 
     static double size = 20.0 * log2(MAX_GRADIENT_MAGNITUDE) + 1.0;
 
-    static string method = "Iso Surface";
+    static string method = this->methods.begin()->first;
     static string selected_file = this->files[this->files_index][0];
 
     static bool equalization = false;
@@ -481,8 +476,7 @@ void WindowManagement::gui()
         }
 
         if (old_method != method) {
-            if (method == "Iso Surface" || method == "Slicing Method" || method == "Sammon Mapping") this->files_index = 0;
-            else if (method == "Stream Line") this->files_index = 1;
+            this->files_index = (method == "Stream Line");
 
             selected_file = this->files[this->files_index][0];
         }
@@ -511,8 +505,14 @@ void WindowManagement::gui()
         ImGui::EndCombo();
     }
 
-    if (method == "Iso Surface" || method == "Slicing Method") {
+    if (method == "Slicing Method") {
         ImGui::Checkbox("Equalization", &equalization);
+
+        ImGui::RadioButton("Red", &current_color, 0);
+        ImGui::SameLine();
+        ImGui::RadioButton("Green", &current_color, 1);
+        ImGui::SameLine();
+        ImGui::RadioButton("Blue", &current_color, 2);
 
         if (!loaded && ImGui::Button("Load")) {
             loaded = true;
@@ -521,7 +521,7 @@ void WindowManagement::gui()
         }
     }
 
-    if ((loaded || method == "Stream Line" || method == "Sammon Mapping") && ImGui::Button("Show")) {
+    if ((loaded || method != "Slicing Method") && ImGui::Button("Show")) {
         showed = true;
 
         if (method == "Slicing Method") {
@@ -529,10 +529,10 @@ void WindowManagement::gui()
         }
 
         current_method = this->methods[method];
-        this->load(selected_file, current_method, (this->files_index == 2));
+        this->load(selected_file, current_method);
     }
-    ImGui::SameLine();
 
+    ImGui::SameLine();
     if (ImGui::Button("Clean")) {
         current_method = METHOD::NONE;
 
@@ -557,16 +557,7 @@ void WindowManagement::gui()
         }
     }
 
-    if (method == "Iso Surface" || method == "Slicing Method") {
-        // select color
-        ImGui::RadioButton("Red", &current_color, 0);
-        ImGui::SameLine();
-        ImGui::RadioButton("Green", &current_color, 1);
-        ImGui::SameLine();
-        ImGui::RadioButton("Blue", &current_color, 2);
-    }
-
-    if (method == "Iso Surface" || method == "Slicing Method") {
+    if (method == "Iso Surface") {
         ImGui::SetWindowFontScale(1.0);
         ImGui::SliderFloat3("Clip Plane Normal", clip_normal, -1.0, 1.0);
         ImGui::SliderFloat("Clip Plane Distanse", &clip_distance, -150.0, 150.0);
@@ -620,9 +611,9 @@ void WindowManagement::gui()
             ImPlot::PushStyleColor(ImPlotCol_Line, IM_COL32(0, 0, 255, 255));
             ImPlot::PlotLine("Blue", color[2].data(), color[2].size());
 
+            ImPlot::PopStyleColor(4);
             ImPlot::EndPlot();
         }
-        ImPlot::PopStyleColor(4);
         // distribution
         ImPlot::SetNextPlotLimits(0.0, 256.0, 0.0, size, ImGuiCond_Always);
         if (ImPlot::BeginPlot("Distribution", "Intensity", "Gradient Magnitude", plot_size, plot_flag)) {
@@ -650,19 +641,16 @@ void WindowManagement::gui()
                     ImVec2 rmin = ImPlot::PlotToPixels(ImPlotPoint(i, j + 1));
                     ImVec2 rmax = ImPlot::PlotToPixels(ImPlotPoint(i + 1, j));
 
-                    float gray = min(255.0f, distribution[i][j]);
-
+                    int gray = distribution[i][j];
                     ImPlot::PushPlotClipRect();
-
                     ImGui::GetWindowDrawList()->AddRectFilled(rmin, rmax, IM_COL32(gray, gray, gray, 255));
-
-                    if (alpha[i][j] > EPSILON) {
-                        int alpha_value = alpha[i][j] * 255;
-
-                        ImGui::GetWindowDrawList()->AddRectFilled(rmin, rmax, IM_COL32(137, 207, 240, alpha_value));
-                    }
-
                     ImPlot::PopPlotClipRect();
+
+                    if (alpha[i][j] >= EPSILON) {
+                        ImPlot::PushPlotClipRect();
+                        ImGui::GetWindowDrawList()->AddRectFilled(rmin, rmax, IM_COL32(137, 207, 240, alpha[i][j] * 255));
+                        ImPlot::PopPlotClipRect();
+                    }
                 }
             }
 
@@ -671,12 +659,15 @@ void WindowManagement::gui()
         ImGui::End();
     }
 
-    if (current_method == METHOD::ISOSURFACE || current_method == METHOD::SLICING) {
+    if (current_method == METHOD::ISOSURFACE) {
         glm::vec3 temp = glm::make_vec3(clip_normal);
         if (glm::length(temp) > EPSILON) temp = glm::normalize(temp);
         glm::vec4 clip_plane = glm::vec4(temp, clip_distance);
 
         this->shader_map[current_method].set_uniform("clip_plane", clip_plane);
+    }
+
+    if (current_method == METHOD::ISOSURFACE || current_method == METHOD::SLICING) {
         this->shader_map[current_method].set_uniform("view_pos", this->camera.position());
         this->shader_map[current_method].set_uniform("light_pos", this->camera.position());
         this->shader_map[current_method].set_uniform("light_color", glm::vec3(1.0, 1.0, 1.0));

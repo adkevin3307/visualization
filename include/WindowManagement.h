@@ -4,9 +4,9 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <map>
 #include <vector>
 #include <string>
-#include <map>
 
 #include "Camera.h"
 #include "Shader.h"
@@ -32,7 +32,7 @@ private:
     void set_callback();
 
     void generate_combo();
-    void load(string filename, METHOD method, bool custom);
+    void load(string filename, METHOD method);
     void gui();
 
 public:

@@ -210,9 +210,11 @@ void StreamLine::run()
 
                     if (line.size() > 0) {
                         int count = 0;
-                        for (size_t line_index = 6; line_index < line.size(); line_index += 7) {
-                            line[line_index] = max(1.0, 3.0 / ((count / 10.0) + 1));
-                            count += 1;
+                        double max_size = 3.5, min_size = 1.0;
+                        double range = (max_size - min_size) / (line.size() / 7 - 1);
+
+                        for (size_t line_index = 6; line_index < line.size(); line_index += 7, count++) {
+                            line[line_index] = max(min_size, max_size - range * count);
                         }
 
                         this->_vertex.insert(this->_vertex.end(), line.begin(), line.end());

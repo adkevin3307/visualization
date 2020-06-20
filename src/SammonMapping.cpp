@@ -75,9 +75,9 @@ void SammonMapping::normalize()
     }
 }
 
-void SammonMapping::kmeans(int group)
+void SammonMapping::kmeans()
 {
-    this->group = group;
+    this->group = 3;
 
     this->label.resize(this->data.size(), 0);
 
@@ -166,7 +166,7 @@ void SammonMapping::load_custom(string filename)
     cout << "data size: " << this->data.size() << ", " << this->data[0].size() << '\n';
 
     this->normalize();
-    this->kmeans(3);
+    this->kmeans();
     this->calculate_distance();
 }
 
@@ -202,7 +202,7 @@ void SammonMapping::load_scalar()
     cout << "data size: " << this->data.size() << ", " << this->data[0].size() << '\n';
 
     this->normalize();
-    this->kmeans(3);
+    this->kmeans();
     this->calculate_distance();
 }
 
@@ -222,9 +222,9 @@ glm::vec2 SammonMapping::descent(float lambda, glm::ivec2 index, vector<glm::vec
     return coefficient * (mapping_point[index.x] - mapping_point[index.y]);
 }
 
-void SammonMapping::run(float alpha)
+void SammonMapping::run()
 {
-    float lambda = 0.3;
+    float alpha = 0.3, lambda = 0.3;
     vector<glm::vec2> mapping_point(this->data.size(), glm::vec2(0.0));
 
     random_device device;

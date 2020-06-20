@@ -1,7 +1,6 @@
 #version 440 core
 in vec3 fragment_pos;
 in vec3 fragment_texture_pos;
-in float slice_check;
 
 out vec4 fragment_color;
 
@@ -13,8 +12,6 @@ uniform vec3 light_color;
 
 void main()
 {
-    if (slice_check < 0.0) discard;
-
     vec4 hold = texture(texture_3d, fragment_texture_pos);
 
     float value = hold.w;

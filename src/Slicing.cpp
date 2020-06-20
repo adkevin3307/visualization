@@ -156,6 +156,8 @@ void Slicing::calculate()
                 this->push(texture, i);
             }
         }
+
+        cout << "vertex " << i << " size: " << this->_vertex[i].size() << '\n';
     }
 }
 

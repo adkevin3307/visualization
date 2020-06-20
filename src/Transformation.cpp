@@ -55,7 +55,6 @@ void Transformation::set_model(TRANSFORMATION type, glm::vec3 v, float angle)
         default:
             break;
     }
-    this->shader.set_uniform("model", this->_model);
 }
 
 void Transformation::set_view(glm::mat4 view)
@@ -73,7 +72,8 @@ void Transformation::set_projection(GLfloat width, GLfloat height, GLfloat rate,
     this->_projection = glm::ortho(left, right, bottom, top, near, far);
 }
 
-void Transformation::set()
+void Transformation::set(bool set_model)
 {
+    if (set_model) this->shader.set_uniform("model", this->_model);
     this->shader.set_uniform("projection_view_model", (this->_projection * this->_view * this->_model));
 }

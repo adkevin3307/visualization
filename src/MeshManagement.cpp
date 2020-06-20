@@ -41,15 +41,17 @@ void MeshManagement::draw(map<METHOD, Shader> &shader_map, glm::mat4 view_matrix
     for (size_t i = 0; i < MeshManagement::mesh.size(); i++) {
         if (MeshManagement::enable[i] == false) continue;
 
-        Transformation transformation(shader_map[MeshManagement::mesh[i].method()]);
+        METHOD method = MeshManagement::mesh[i].method();
+
+        Transformation transformation(shader_map[method]);
         transformation.set_projection(WIDTH, HEIGHT, rate, 0.0, 500.0);
         transformation.set_view(view_matrix);
 
         MeshManagement::mesh[i].transform(transformation);
-        transformation.set();
+        transformation.set((method == METHOD::ISOSURFACE || method == METHOD::SLICING));
 
-        if (MeshManagement::mesh[i].method() == METHOD::ISOSURFACE) {
-            shader_map[MeshManagement::mesh[i].method()].set_uniform("object_color", glm::vec4(0.41, 0.37, 0.89, 1.0));
+        if (method == METHOD::ISOSURFACE) {
+            shader_map[method].set_uniform("object_color", glm::vec4(0.41, 0.37, 0.89, 1.0));
         }
         MeshManagement::mesh[i].draw(GL_FILL);
     }

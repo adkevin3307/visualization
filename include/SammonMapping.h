@@ -20,7 +20,7 @@ private:
 
     float distance(vector<float> p1, vector<float> p2);
     void normalize();
-    void kmeans(int group);
+    void kmeans();
     void calculate_distance();
     void load_custom(string filename);
     void load_scalar();
@@ -32,7 +32,7 @@ public:
     SammonMapping(string inf_file, string raw_file);
     ~SammonMapping();
 
-    void run(float alpha);
+    void run();
     glm::vec3 shape() override;
     vector<GLfloat>& vertex() override;
     vector<int> attribute() override;
