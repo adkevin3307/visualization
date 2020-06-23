@@ -121,7 +121,6 @@ void Volume::load_raw()
     file.read(temp, this->_shape.x * this->_shape.y * this->_shape.z * this->byte_size);
     file.close();
 
-    bool flag = false;
     for (auto i = 0; i < this->_shape.x; i++) {
         for (auto j = 0; j < this->_shape.y; j++) {
             for (auto k = 0; k < this->_shape.z; k++) {
@@ -153,8 +152,7 @@ void Volume::load_raw()
                         break;
                 }
 
-                if (flag == false) {
-                    flag = true;
+                if (i == 0 && j == 0 && k == 0) {
                     this->_max_value = this->_min_value = this->data[i][j][k].first;
                 }
                 if (this->data[i][j][k].first - this->_max_value > EPSILON) this->_max_value = this->data[i][j][k].first;

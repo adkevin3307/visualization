@@ -107,7 +107,7 @@ void Slicing::generate_texture_3d()
                 int index = (k * shape.x * shape.y + j * shape.x + i) * 4;
 
                 glm::vec3 normal = super::volume(i, j, k).second;
-                float value = (super::volume(i, j, k).first - limit_value.x) / limit_value.y;
+                float value = (super::volume(i, j, k).first - limit_value.x) / (limit_value.y - limit_value.x);
 
                 glm::vec4 voxel = glm::vec4(normal, value);
                 for (auto delta = 0; delta < 4; delta++) {
