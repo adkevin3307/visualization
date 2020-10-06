@@ -1,7 +1,9 @@
 Data/
 obj/
-test.*
-*.exe
-*.out
+test*
+main
+main.exe
+main.out
 imgui.ini
 transfer_function.txt
+
