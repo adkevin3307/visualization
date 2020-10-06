@@ -45,7 +45,7 @@ else
 
 	mkdir = mkdir -p $(OBJ_DIR)
 
-	rm = rm -rf *.exe *.out imgui.ini $(OBJ_DIR) transfer_function.txt
+	rm = rm -rf main *.exe *.out imgui.ini $(OBJ_DIR) transfer_function.txt
 endif
 
 $(OBJ_DIR)/%.o: %.cpp
