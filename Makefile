@@ -16,7 +16,7 @@ OBJS = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(basename $(notdir $(SOURCES)))
 
 CXXFLAGS = -std=c++17 -I./include -Wall
 
-LIBS = -L./lib
+LIBS =
 
 mkdir =
 rm =
@@ -26,7 +26,7 @@ ifeq ($(findstring static, $(MAKECMDGOALS)), static)
 endif
 
 ifeq ($(OS), Windows_NT)
-	LIBS += -lglfw3 -lopengl32 -lgdi32
+	LIBS += -L./lib/windows -lglfw3 -lopengl32 -lgdi32
 
 	mkdir = if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)
 
@@ -35,13 +35,13 @@ else ifeq ($(findstring Microsoft, $(shell uname -a)), Microsoft)
 	CXX = cmd.exe /C g++
 	EXE = main.exe
 
-	LIBS += -lglfw3 -lopengl32 -lgdi32
+	LIBS += -L./lib/windows -lglfw3 -lopengl32 -lgdi32
 
 	mkdir = mkdir -p $(OBJ_DIR)
 
 	rm = rm -rf *.exe *.out imgui.ini $(OBJ_DIR) transfer_function.txt
 else
-	LIBS += -lglfw3 -pthread -lXrandr -lXxf86vm -lXi -lXinerama -lX11 -ldl -lXcursor
+	LIBS += -L./lib/linux -lglfw3 -pthread -lXrandr -lXxf86vm -lXi -lXinerama -lX11 -ldl -lXcursor
 
 	mkdir = mkdir -p $(OBJ_DIR)
 
