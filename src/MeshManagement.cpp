@@ -44,7 +44,7 @@ void MeshManagement::draw(map<METHOD, Shader> &shader_map, glm::mat4 view_matrix
         METHOD method = MeshManagement::mesh[i].method();
 
         Transformation transformation(shader_map[method]);
-        transformation.set_projection(WIDTH, HEIGHT, rate, 0.0, 500.0);
+        transformation.set_projection(WIDTH, HEIGHT, rate, -5000.0, 5000.0);
         transformation.set_view(view_matrix);
 
         MeshManagement::mesh[i].transform(transformation);
